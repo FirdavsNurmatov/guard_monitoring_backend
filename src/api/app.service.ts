@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import helmet from 'helmet';
 import { NestExpressApplication } from '@nestjs/platform-express';
 import { join } from 'path';
+import { existsSync, mkdirSync } from 'fs';
 
 export default class Application {
   public static async main(): Promise<void> {
@@ -15,6 +16,13 @@ export default class Application {
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
     );
+
+    // 📂 uploads/objects katalogi yo‘qligini tekshirish va yaratish
+    const uploadPath = join(__dirname, '..', '..', '..', 'uploads', 'objects');
+    if (!existsSync(uploadPath)) {
+      mkdirSync(uploadPath, { recursive: true });
+      console.log(`📂 Created folder: ${uploadPath}`);
+    }
 
     app.useStaticAssets(
       join(__dirname, '..', '..', '..', 'uploads', 'objects'),
