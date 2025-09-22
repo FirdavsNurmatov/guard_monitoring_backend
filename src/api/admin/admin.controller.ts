@@ -28,52 +28,55 @@ import { UpdateObjectDto } from './dto/object/update-map.dto';
 
 @Controller('admin')
 @UseGuards(AuthGuard, RoleGuard)
-@Roles(Role.ADMIN)
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Roles(Role.ADMIN)
   @Post('guards')
   createGuard(@Body() createGuardDto: CreateUserDto) {
     return this.adminService.createGuard(createGuardDto);
   }
 
-  @Get('logs/:id')
-  findAllLogsByMapId(
-    @Param('id') id: number,
-    @Query('page') page = 1,
-    @Query('limit') limit = 10,
-  ) {
+  @Roles(Role.ADMIN)
+  @Get('logs')
+  findAllLogsByMapId(@Query('page') page = 1, @Query('limit') limit = 10) {
     return this.adminService.findAllLogsWithQuery({
       page: +page,
       limit: +limit,
     });
   }
 
+  @Roles(Role.ADMIN)
   @Get('logs')
   findAllLogs() {
     return this.adminService.findAllLogs();
   }
 
+  @Roles(Role.ADMIN)
   @Get('guards/positions')
   async getGuardPositions() {
     return this.adminService.getGuardPositions();
   }
 
+  @Roles(Role.ADMIN)
   @Get('users')
   findAllUsers() {
     return this.adminService.findAllUsers();
   }
 
+  @Roles(Role.ADMIN)
   @Get('guards')
   findAllGuards() {
     return this.adminService.findAllGuards();
   }
 
+  @Roles(Role.ADMIN)
   @Get('guards/:id')
   findGuardById(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.findGuardById(id);
   }
 
+  @Roles(Role.ADMIN)
   @Patch('guards/:id')
   updateGuard(
     @Param('id', ParseIntPipe) id: number,
@@ -82,11 +85,13 @@ export class AdminController {
     return this.adminService.updateGuard(id, updateGuardDto);
   }
 
+  @Roles(Role.ADMIN)
   @Delete('guards/:id')
   removeGuard(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.removeGuard(id);
   }
 
+  @Roles(Role.ADMIN)
   @Post('object')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -112,42 +117,50 @@ export class AdminController {
     return this.adminService.createObject(file, body.name);
   }
 
+  @Roles(Role.ADMIN)
   @Get('objects')
   async findAllObjects() {
     return this.adminService.findAllObjects();
   }
 
+  @Roles(Role.ADMIN)
   @Get('object/:id')
   async findOneObjectById(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.findOneObjectById(id);
   }
 
+  @Roles(Role.ADMIN, Role.OPERATOR)
   @Get('first-object')
   async findFirstObject() {
     return this.adminService.findFirstObject();
   }
 
+  @Roles(Role.ADMIN, Role.OPERATOR)
   @Patch('object/:id')
   update(@Param('id', ParseIntPipe) id: number, @Body() dto: UpdateObjectDto) {
     return this.adminService.updateObjectById(id, dto);
   }
 
+  @Roles(Role.ADMIN)
   @Delete('object/:id')
   remove(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.removeObjectById(id);
   }
 
   // Checkpoints
+  @Roles(Role.ADMIN, Role.OPERATOR)
   @Get('checkpoints')
   async getCheckpoints() {
     return this.adminService.findAllCheckpoints();
   }
 
+  @Roles(Role.ADMIN)
   @Post('checkpoints')
   async createCheckpoint(@Body() dto: CreateCheckpointDto) {
     return this.adminService.createCheckpoint(dto);
   }
 
+  @Roles(Role.ADMIN)
   @Patch('checkpoints/:id')
   async updateCheckpoint(
     @Param('id', ParseIntPipe) id: number,
@@ -156,6 +169,7 @@ export class AdminController {
     return this.adminService.updateCheckpoint(id, dto);
   }
 
+  @Roles(Role.ADMIN)
   @Delete('checkpoints/:id')
   async deleteCheckpoint(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.deleteCheckpoint(id);

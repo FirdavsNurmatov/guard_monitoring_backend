@@ -11,7 +11,7 @@ export default class Application {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
     app.use(helmet());
     app.enableCors({
-      origin: ['http://localhost:5173', 'http://localhost:5174'],
+      origin: ['http://84.54.118.39:8084', 'http://84.54.118.39:8085'],
     });
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),

@@ -186,7 +186,6 @@ export class AdminService {
           name,
         },
       });
-      console.log(res, map);
 
       return map;
     } catch (error) {
