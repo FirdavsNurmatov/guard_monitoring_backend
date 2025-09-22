@@ -1,0 +1,87 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  ADMIN
+  OPERATOR
+  GUARD
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+model Users {
+  id Int @id @default(autoincrement())
+
+  username String @unique
+  password String
+  role     Role   @default(GUARD)
+  status   Status @default(ACTIVE)
+
+  logs MonitoringLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum CheckpointStatus {
+  ON_TIME
+  LATE
+  MISSED
+}
+
+model Objects {
+  id Int @id @default(autoincrement())
+
+  name     String
+  imageUrl String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Checkpoints {
+  id Int @id @default(autoincrement())
+
+  name        String
+  normal_time Int    @default(15)
+  pass_time   Int    @default(2)
+  position    Json
+  location    Json?
+  card_number String @unique
+
+  MonitoringLog MonitoringLog[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MonitoringLog {
+  id Int @id @default(autoincrement())
+
+  status   CheckpointStatus
+  location Json?
+
+  userId Int
+  user   Users @relation(fields: [userId], references: [id])
+
+  checkpointId Int
+  checkpoint   Checkpoints @relation(fields: [checkpointId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
