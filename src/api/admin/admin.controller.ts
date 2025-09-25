@@ -123,7 +123,7 @@ export class AdminController {
     return this.adminService.findAllObjects();
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.OPERATOR)
   @Get('object/:id')
   async findOneObjectById(@Param('id', ParseIntPipe) id: number) {
     return this.adminService.findOneObjectById(id);
