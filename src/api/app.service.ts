@@ -14,6 +14,10 @@ export default class Application {
       new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),
     );
 
+    app.enableCors({
+      origin: ['http://84.54.118.39:8084', 'http://84.54.118.39:8085'],
+    });
+
     // 📂 uploads/objects katalogi yo‘qligini tekshirish va yaratish
     const uploadPath = join(__dirname, '..', '..', '..', 'uploads', 'objects');
     if (!existsSync(uploadPath)) {
