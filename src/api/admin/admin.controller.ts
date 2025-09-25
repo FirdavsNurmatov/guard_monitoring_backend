@@ -37,7 +37,7 @@ export class AdminController {
     return this.adminService.createGuard(createGuardDto);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.ADMIN, Role.OPERATOR)
   @Get('logs')
   findAllLogsByMapId(@Query('page') page = 1, @Query('limit') limit = 10) {
     return this.adminService.findAllLogsWithQuery({
