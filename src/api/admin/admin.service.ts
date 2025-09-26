@@ -10,14 +10,130 @@ import { CreateCheckpointDto } from './dto/checkpoint/create-checkpoint.dto';
 import { CreateUserDto } from './dto/user/create-guard.dto';
 import { UpdateObjectDto } from './dto/object/update-map.dto';
 import { UpdateCheckpointDto } from './dto/checkpoint/update-checkpoint.dto';
-import { Prisma } from '@prisma/client';
+import { CheckpointStatus, Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
 import * as fs from 'fs';
 import * as path from 'path';
+import { Cron, CronExpression } from '@nestjs/schedule';
+import { CheckinDto } from './dto/checkin/checkin.dto';
+import { MonitoringGateway } from '../monitoring/monitoring.gateway';
 
 @Injectable()
 export class AdminService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gateway: MonitoringGateway,
+  ) {}
+
+  @Cron(CronExpression.EVERY_5_SECONDS)
+  async checkGuardStatus() {
+    try {
+      const checkpoints = await this.prisma.checkpoints.findMany({
+        include: {
+          MonitoringLog: {
+            orderBy: { createdAt: 'desc' },
+            take: 1,
+          },
+        },
+      });
+
+      const now = new Date();
+
+      for (const checkpoint of checkpoints) {
+        const lastLog = checkpoint.MonitoringLog[0];
+
+        if (!lastLog || lastLog.status == 'MISSED') continue;
+
+        const diffMinutes = Math.floor(
+          (now.getTime() - lastLog.createdAt.getTime()) / (1000 * 60) + 0.06,
+        );
+
+        let status: 'ON_TIME' | 'LATE' | 'MISSED' = 'ON_TIME';
+
+        if (diffMinutes >= checkpoint.pass_time && lastLog.status == 'LATE') {
+          status = 'MISSED';
+        } else if (diffMinutes >= checkpoint.normal_time) {
+          status = 'LATE';
+        }
+
+        if (status !== 'ON_TIME' && lastLog.status !== status) {
+          const res = await this.prisma.monitoringLog.create({
+            data: {
+              status,
+              checkpointId: checkpoint.id,
+              userId: lastLog.userId,
+            },
+            include: {
+              user: { select: { id: true, username: true } },
+              checkpoint: {
+                select: { id: true, name: true, position: true },
+              },
+            },
+          });
+          this.gateway.sendLog(res);
+          console.log(res);
+        }
+
+        console.log(
+          `[${new Date().toLocaleTimeString('uz-UZ')}]`,
+          'Checkpoint:',
+          checkpoint.name,
+          '| Diff:',
+          diffMinutes,
+          '| Normal:',
+          checkpoint.normal_time,
+          '| Pass:',
+          checkpoint.pass_time,
+          '| Status:',
+          lastLog.status,
+        );
+      }
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async checkin(data: CheckinDto) {
+    const { userId, checkpointCardNum } = data;
+
+    if (!userId || !checkpointCardNum) {
+      throw new BadRequestException('userId and checkpointCardNum required');
+    }
+
+    const user = await this.prisma.users.findUnique({
+      where: { id: userId },
+    });
+    if (!user) {
+      throw new BadRequestException('Guard does not exist');
+    }
+    if (user.role !== 'GUARD') {
+      throw new BadRequestException('User must be Guard');
+    }
+
+    const checkpoint = await this.prisma.checkpoints.findUnique({
+      where: { card_number: checkpointCardNum },
+    });
+    if (!checkpoint) {
+      throw new BadRequestException('Checkpoint does not exist');
+    }
+
+    const res = await this.prisma.monitoringLog.create({
+      data: {
+        userId,
+        checkpointId: checkpoint.id,
+        status: CheckpointStatus.ON_TIME,
+      },
+      include: {
+        user: { select: { id: true, username: true } },
+        checkpoint: {
+          select: { id: true, name: true, position: true },
+        },
+      },
+    });
+
+    this.gateway.sendLog(res);
+    return { success: true, res };
+  }
 
   async createGuard(createGuardDto: CreateUserDto) {
     const salt = await bcrypt.genSalt();

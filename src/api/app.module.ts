@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { EventsGateway } from './events/events.gateway';
+import { MonitoringGateway } from './monitoring/monitoring.gateway';
 import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { AdminModule } from './admin/admin.module';
@@ -20,6 +20,6 @@ import { PrismaModule } from 'src/common/prisma/prisma.module';
     AdminModule,
   ],
   controllers: [],
-  providers: [EventsGateway],
+  providers: [MonitoringGateway],
 })
 export class AppModule {}

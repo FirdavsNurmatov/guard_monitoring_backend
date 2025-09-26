@@ -4,6 +4,7 @@ import { AdminController } from './admin.controller';
 import { PrismaService } from 'src/common/prisma/prisma.service';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { MonitoringGateway } from '../monitoring/monitoring.gateway';
 
 @Module({
   imports: [
@@ -22,6 +23,6 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
     }),
   ],
   controllers: [AdminController],
-  providers: [AdminService, PrismaService],
+  providers: [AdminService, PrismaService, MonitoringGateway],
 })
 export class AdminModule {}
