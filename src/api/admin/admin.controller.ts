@@ -31,6 +31,11 @@ import { CheckinDto } from './dto/checkin/checkin.dto';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Get('guardlist')
+  async guardsList() {
+    return this.adminService.guardList();
+  }
+
   @Post('checkin')
   async guardCheckin(@Body() dto: CheckinDto) {
     return this.adminService.checkin(dto);

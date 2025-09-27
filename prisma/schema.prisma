@@ -27,10 +27,11 @@ enum Status {
 model Users {
   id Int @id @default(autoincrement())
 
-  username String @unique
+  username String?
+  login    String  @unique
   password String
-  role     Role   @default(GUARD)
-  status   Status @default(ACTIVE)
+  role     Role    @default(GUARD)
+  status   Status  @default(ACTIVE)
 
   logs MonitoringLog[]
 
@@ -80,7 +81,7 @@ model MonitoringLog {
   user   Users @relation(fields: [userId], references: [id])
 
   checkpointId Int
-  checkpoint   Checkpoints @relation(fields: [checkpointId], references: [id])
+  checkpoint   Checkpoints @relation(fields: [checkpointId], references: [id], onDelete: Cascade, onUpdate: Cascade)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

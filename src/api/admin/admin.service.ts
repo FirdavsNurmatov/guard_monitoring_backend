@@ -64,7 +64,7 @@ export class AdminService {
               userId: lastLog.userId,
             },
             include: {
-              user: { select: { id: true, username: true } },
+              user: { select: { id: true, login: true, username: true } },
               checkpoint: {
                 select: { id: true, name: true, position: true },
               },
@@ -124,7 +124,7 @@ export class AdminService {
         status: CheckpointStatus.ON_TIME,
       },
       include: {
-        user: { select: { id: true, username: true } },
+        user: { select: { id: true, login: true, username: true } },
         checkpoint: {
           select: { id: true, name: true, position: true },
         },
@@ -135,12 +135,26 @@ export class AdminService {
     return { success: true, res };
   }
 
+  async guardList() {
+    try {
+      const res = await this.prisma.users.findMany({
+        where: { role: 'GUARD' },
+        select: { id: true, login: true, username: true },
+      });
+
+      return res;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
   async createGuard(createGuardDto: CreateUserDto) {
     const salt = await bcrypt.genSalt();
     const hashedPassword = await bcrypt.hash(createGuardDto.password, salt);
 
     return await this.prisma.users.create({
       data: {
+        login: createGuardDto.login,
         username: createGuardDto.username,
         password: hashedPassword,
         role: 'GUARD',
@@ -196,7 +210,7 @@ export class AdminService {
             })),
         },
         include: {
-          user: { select: { id: true, username: true } },
+          user: { select: { id: true, login: true, username: true } },
           checkpoint: { select: { id: true, name: true, position: true } },
         },
         orderBy: { createdAt: 'desc' },
@@ -241,6 +255,7 @@ export class AdminService {
 
       const data = res.map((item) => ({
         id: item.id,
+        login: item.login,
         username: item.username,
         role: item.role,
         status: item.status,
@@ -366,6 +381,8 @@ export class AdminService {
           fs.unlinkSync(filePath);
         }
       }
+      // await this.prisma.monitoringLog.deleteMany();
+      await this.prisma.checkpoints.deleteMany();
 
       return await this.prisma.objects.delete({ where: { id } });
     } catch (error) {
@@ -390,10 +407,13 @@ export class AdminService {
         },
       });
       return res;
-    } catch (err) {
-      throw new InternalServerErrorException(
-        err.message || 'Failed to create checkpoint',
-      );
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new BadRequestException('Duplicate checkpoint card number');
+        }
+      }
+      throw new BadRequestException(error.message);
     }
   }
 
@@ -409,6 +429,11 @@ export class AdminService {
 
       return res;
     } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new BadRequestException('Duplicate checkpoint card number');
+        }
+      }
       throw new BadRequestException(error.message);
     }
   }

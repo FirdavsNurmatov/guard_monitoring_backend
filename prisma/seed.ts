@@ -9,10 +9,10 @@ async function main() {
 
   // Admin foydalanuvchi
   await prisma.users.upsert({
-    where: { username: 'admin' },
+    where: { login: 'admin' },
     update: {},
     create: {
-      username: 'admin',
+      login: 'admin',
       password,
       role: 'ADMIN',
       status: 'ACTIVE',
@@ -21,10 +21,10 @@ async function main() {
 
   // Operator foydalanuvchi
   await prisma.users.upsert({
-    where: { username: 'operator' },
+    where: { login: 'operator' },
     update: {},
     create: {
-      username: 'operator',
+      login: 'operator',
       password,
       role: 'OPERATOR',
       status: 'ACTIVE',
@@ -33,10 +33,10 @@ async function main() {
 
   // Guard foydalanuvchi
   await prisma.users.upsert({
-    where: { username: 'guard' },
+    where: { login: 'guard' },
     update: {},
     create: {
-      username: 'guard',
+      login: 'guard',
       password,
       role: 'GUARD',
       status: 'ACTIVE',

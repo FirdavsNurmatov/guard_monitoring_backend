@@ -16,4 +16,9 @@ export class AuthController {
   signIn(@Body() loginAuthdto: LoginAuthDto) {
     return this.authService.signIn(loginAuthdto);
   }
+
+  @Post('guard')
+  signInGuard(@Body() loginAuthdto: LoginAuthDto) {
+    return this.authService.signInGuard(loginAuthdto);
+  }
 }

@@ -4,7 +4,7 @@ export class LoginAuthDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(2)
-  username: string;
+  login: string;
 
   @IsNotEmpty()
   @IsString()

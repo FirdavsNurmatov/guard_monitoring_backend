@@ -7,6 +7,11 @@ export class UpdateGuardDto extends PartialType(CreateUserDto) {
   @IsOptional()
   @IsString()
   @MinLength(2)
+  login?: string;
+  
+  @IsOptional()
+  @IsString()
+  @MinLength(2)
   username?: string;
 
   @IsOptional()

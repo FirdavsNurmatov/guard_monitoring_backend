@@ -20,7 +20,7 @@ export class AuthService {
 
   async signUp(registerAuthDto: RegisterAuthDto) {
     const ifUserExists = await this.prisma.users.findUnique({
-      where: { username: registerAuthDto.username },
+      where: { login: registerAuthDto.login },
     });
 
     if (ifUserExists) {
@@ -47,11 +47,11 @@ export class AuthService {
   }
 
   async signIn(loginAuthDto: LoginAuthDto) {
-    const { username, password } = loginAuthDto;
+    const { login, password } = loginAuthDto;
     let accesToken = {};
     try {
       const data = await this.prisma.users.findUnique({
-        where: { username },
+        where: { login },
       });
 
       if (!data) {
@@ -61,7 +61,7 @@ export class AuthService {
       } else if (await bcrypt.compare(password, data.password)) {
         accesToken = await this.generateAccessToken({
           id: data.id,
-          username: data.username,
+          login: data.login,
           role: data.role,
           status: data.status,
         });
@@ -73,13 +73,43 @@ export class AuthService {
         status_code: 200,
         message: 'Successfully logged in',
         data: {
-          username,
+          login,
           role: data.role,
           ...accesToken,
         },
       };
     } catch (error) {
       throw new BadRequestException(error.message);
+    }
+  }
+
+  async signInGuard(loginAuthDto: LoginAuthDto) {
+    try {
+      const { login, password } = loginAuthDto;
+
+      const data = await this.prisma.users.findUnique({
+        where: { login },
+      });
+
+      if (!data) throw new NotFoundException('Guard not found');
+
+      if (data.status == 'INACTIVE') {
+        throw new BadRequestException('Guard is inactive');
+      } else if (!(await bcrypt.compare(password, data.password))) {
+        throw new NotFoundException('login or password incorrect');
+      }
+
+      return {
+        status: 'success',
+        id: data.id,
+        login: data.login,
+        username: data.username,
+        // guardStatus: data.status,
+      };
+    } catch (error) {
+      if (error.message != 'Guard not found')
+        throw new BadRequestException(error.message);
+      throw new NotFoundException(error.message);
     }
   }
 
