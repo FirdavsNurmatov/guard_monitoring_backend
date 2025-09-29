@@ -15,7 +15,11 @@ export default class Application {
     );
 
     app.enableCors({
-      origin: ['http://84.54.118.39:8084', 'http://84.54.118.39:8085'],
+      origin: [
+        'http://84.54.118.39:8084',
+        'http://84.54.118.39:8085',
+        'http://localhost:5173',
+      ],
     });
 
     // 📂 uploads/objects katalogi yo‘qligini tekshirish va yaratish
