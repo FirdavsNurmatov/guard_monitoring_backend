@@ -422,13 +422,13 @@ export class AdminService {
       const res = await this.prisma.checkpoints.update({
         where: { id },
         data: {
-          ...dto,
-          position: dto.position as unknown as Prisma.InputJsonValue,
+          card_number: dto.card_number,
         },
       });
 
       return res;
     } catch (error) {
+      console.log(error);
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           throw new BadRequestException('Duplicate checkpoint card number');
