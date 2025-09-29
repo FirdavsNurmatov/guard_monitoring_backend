@@ -110,9 +110,10 @@ export class AdminService {
       throw new BadRequestException('User must be Guard');
     }
 
-    const checkpoint = await this.prisma.checkpoints.findUnique({
+    const checkpoint = await this.prisma.checkpoints.findFirst({
       where: { card_number: checkpointCardNum },
     });
+
     if (!checkpoint) {
       throw new BadRequestException('Checkpoint does not exist');
     }
