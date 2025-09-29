@@ -63,7 +63,7 @@ model Checkpoints {
   pass_time   Int    @default(2)
   position    Json
   location    Json?
-  card_number String @unique
+  card_number String
 
   MonitoringLog MonitoringLog[]
 
