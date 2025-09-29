@@ -419,6 +419,8 @@ export class AdminService {
 
   async updateCheckpoint(id: number, dto: UpdateCheckpointDto) {
     try {
+      console.log(dto);
+
       const res = await this.prisma.checkpoints.update({
         where: { id },
         data: {
