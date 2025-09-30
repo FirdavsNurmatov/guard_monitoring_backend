@@ -140,7 +140,7 @@ export class AdminService {
     try {
       const res = await this.prisma.users.findMany({
         where: { role: 'GUARD' },
-        select: { id: true, login: true, username: true },
+        select: { login: true, username: true },
       });
 
       return res;
