@@ -71,7 +71,6 @@ export class AdminService {
             },
           });
           this.gateway.sendLog(res);
-          console.log(res);
         }
 
         console.log(
@@ -420,21 +419,22 @@ export class AdminService {
 
   async updateCheckpoint(id: number, dto: UpdateCheckpointDto) {
     try {
-      console.log(dto);
-
       const res = await this.prisma.checkpoints.update({
         where: { id },
         data: {
-          card_number: dto.card_number,
+          ...dto,
+          position: dto.position ? { ...dto.position } : undefined,
         },
       });
 
       return res;
     } catch (error) {
-      console.log(error);
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           throw new BadRequestException('Duplicate checkpoint card number');
+        }
+        if (error.code === 'P2025') {
+          throw new NotFoundException(`Checkpoint with id ${id} not found`);
         }
       }
       throw new BadRequestException(error.message);
