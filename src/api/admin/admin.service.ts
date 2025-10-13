@@ -1,7 +1,7 @@
 import {
   BadRequestException,
+  ForbiddenException,
   Injectable,
-  InternalServerErrorException,
   NotFoundException,
 } from '@nestjs/common';
 import { PrismaService } from 'src/common/prisma/prisma.service';
@@ -17,6 +17,7 @@ import * as path from 'path';
 import { Cron, CronExpression } from '@nestjs/schedule';
 import { CheckinDto } from './dto/checkin/checkin.dto';
 import { MonitoringGateway } from '../monitoring/monitoring.gateway';
+import { CreateGpsLogDto } from './dto/gps/create-gps-log.dto';
 
 @Injectable()
 export class AdminService {
@@ -25,6 +26,52 @@ export class AdminService {
     private readonly gateway: MonitoringGateway,
   ) {}
 
+  // Gps
+  async create(userData: CreateGpsLogDto) {
+    try {
+      const data = await this.prisma.users.findUnique({
+        where: { id: userData.userId },
+      });
+
+      if (!data) throw new NotFoundException('User not found');
+      else if (data.role !== 'GUARD') throw new ForbiddenException('Forbidden');
+
+      const gpsLog = await this.prisma.gpsLog.create({
+        data: {
+          userId: userData.userId,
+          location: {
+            lat: userData.location.lat,
+            lng: userData.location.lng,
+          } as any,
+        },
+      });
+
+      this.gateway.sendGps(`gps:${userData.userId}`);
+
+      return gpsLog;
+    } catch (error) {
+      if (error.message.includes('found'))
+        throw new NotFoundException(error.message);
+      else if (error.message == 'Forbidden')
+        throw new ForbiddenException(error.message);
+      throw new BadRequestException('Something went wrong');
+    }
+  }
+
+  async findLatest(userId: number, limit = 50) {
+    try {
+      return await this.prisma.gpsLog.findMany({
+        where: { userId },
+        select: { userId: true, location: true },
+        orderBy: { createdAt: 'desc' },
+        take: limit,
+      });
+    } catch (error) {
+      throw new BadRequestException('Something went wrong');
+    }
+  }
+
+  // Other logic
   @Cron(CronExpression.EVERY_5_SECONDS)
   async checkGuardStatus() {
     try {
@@ -45,7 +92,7 @@ export class AdminService {
         if (!lastLog || lastLog.status == 'MISSED') continue;
 
         const diffMinutes = Math.floor(
-          (now.getTime() - lastLog.createdAt.getTime()) / (1000 * 60) + 0.06,
+          (now.getTime() - lastLog.createdAt.getTime()) / (1000 * 60) + 0.02,
         );
 
         let status: 'ON_TIME' | 'LATE' | 'MISSED' = 'ON_TIME';
@@ -66,7 +113,12 @@ export class AdminService {
             include: {
               user: { select: { id: true, login: true, username: true } },
               checkpoint: {
-                select: { id: true, name: true, position: true },
+                select: {
+                  objectId: true,
+                  id: true,
+                  name: true,
+                  position: true,
+                },
               },
             },
           });
@@ -126,7 +178,12 @@ export class AdminService {
       include: {
         user: { select: { id: true, login: true, username: true } },
         checkpoint: {
-          select: { id: true, name: true, position: true },
+          select: {
+            objectId: true,
+            id: true,
+            name: true,
+            position: true,
+          },
         },
       },
     });
@@ -188,18 +245,37 @@ export class AdminService {
     }
   }
 
-  async findAllLogsWithQuery(options: { page: number; limit: number }) {
+  async findAllLogsWithQuery(options: {
+    objectId: number;
+    page: number;
+    limit: number;
+  }) {
     try {
-      const { page, limit } = options;
+      const { objectId, page, limit } = options;
       const skip = (page - 1) * limit;
 
-      // 1. Har bir checkpoint uchun oxirgi log vaqtini topamiz
+      // 1. Shu objectId ga tegishli checkpointlarni topamiz
+      const checkpoints = await this.prisma.checkpoints.findMany({
+        where: { objectId },
+        select: { id: true },
+      });
+
+      const checkpointIds = checkpoints.map((c) => c.id);
+
+      if (checkpointIds.length === 0) {
+        return { data: [], total: 0, page, lastPage: 0 };
+      }
+
+      // 2. Har bir checkpoint uchun oxirgi log vaqtini topamiz
       const grouped = await this.prisma.monitoringLog.groupBy({
         by: ['checkpointId'],
+        where: {
+          checkpointId: { in: checkpointIds },
+        },
         _max: { createdAt: true },
       });
 
-      // 2. Oxirgi loglarni olaymiz
+      // 3. Oxirgi loglarni olaymiz
       const logs = await this.prisma.monitoringLog.findMany({
         where: {
           OR: grouped
@@ -305,21 +381,29 @@ export class AdminService {
   }
 
   // Objects
-  async createObject(file: Express.Multer.File, name: string) {
+  async createObject(
+    file: Express.Multer.File | undefined,
+    body: { name: string; type: string; position?: any; zoom?: number },
+  ) {
     try {
-      const res = await this.prisma.objects.findFirst();
+      const { name, type, position, zoom } = body;
 
-      if (res) throw new BadRequestException('Object already exists!');
+      const data: any = {
+        name,
+        type,
+        position: position ? JSON.parse(position) : undefined,
+        zoom: zoom ? Number(zoom) : null,
+      };
 
-      const map = await this.prisma.objects.create({
-        data: {
-          imageUrl: `/uploads/objects/${file.filename}`,
-          name,
-        },
-      });
+      // 🔹 faqat IMAGE bo‘lsa faylni saqlaymiz
+      if (file && type === 'IMAGE') {
+        data.imageUrl = `/uploads/objects/${file.filename}`;
+      }
 
-      return map;
+      const created = await this.prisma.objects.create({ data });
+      return created;
     } catch (error) {
+      console.error(error);
       throw new BadRequestException(error.message);
     }
   }
@@ -328,7 +412,7 @@ export class AdminService {
     try {
       const map = await this.prisma.objects.findMany();
 
-      if (!map) throw new NotFoundException(`Map not found`);
+      if (!map) throw new NotFoundException(`Object not found`);
       return map;
     } catch (error) {
       throw new BadRequestException(error.message);
@@ -359,7 +443,10 @@ export class AdminService {
   async updateObjectById(id: number, dto: UpdateObjectDto) {
     return await this.prisma.objects.update({
       where: { id },
-      data: dto,
+      data: {
+        ...dto,
+        position: dto.position ? { ...dto.position } : undefined,
+      },
     });
   }
 
@@ -391,8 +478,9 @@ export class AdminService {
   }
 
   // Checkpoints
-  async findAllCheckpoints() {
+  async findAllCheckpoints(objectId: number) {
     const res = await this.prisma.checkpoints.findMany({
+      where: { objectId },
       orderBy: { createdAt: 'asc' },
     });
     return { res, length: res.length };
@@ -404,6 +492,7 @@ export class AdminService {
         data: {
           ...dto,
           position: dto.position as unknown as Prisma.InputJsonValue,
+          location: dto.location as unknown as Prisma.InputJsonValue,
         },
       });
       return res;
@@ -424,6 +513,7 @@ export class AdminService {
         data: {
           ...dto,
           position: dto.position ? { ...dto.position } : undefined,
+          location: dto.location ? { ...dto.location } : undefined,
         },
       });
 

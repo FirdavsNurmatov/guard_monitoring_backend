@@ -5,7 +5,6 @@ import {
   Min,
   Max,
   IsOptional,
-  IsObject,
   ValidateNested,
   MinLength,
   IsNotEmpty,
@@ -25,10 +24,25 @@ class PositionDto {
   yPercent: number;
 }
 
+class LocationDto {
+  @IsNotEmpty()
+  @IsNumber()
+  lat: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  lng: number;
+}
+
 export class CreateCheckpointDto {
   @IsNotEmpty()
+  @IsNumber()
+  @Min(1)
+  objectId: number;
+
+  @IsNotEmpty()
   @IsString()
-  @MinLength(2)
+  @MinLength(1)
   name: string;
 
   @IsOptional()
@@ -41,18 +55,18 @@ export class CreateCheckpointDto {
   @Min(1)
   pass_time?: number;
 
-  @IsNotEmpty()
-  @IsObject()
-  @ValidateNested({ each: true })
+  @IsOptional()
+  @ValidateNested()
   @Type(() => PositionDto)
-  position: PositionDto;
+  position?: PositionDto; // IMAGE bo‘lsa ishlatiladi
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => LocationDto)
+  location?: LocationDto; // MAP bo‘lsa ishlatiladi
 
   @IsNotEmpty()
   @IsString()
-  @MinLength(2)
+  @MinLength(1)
   card_number: string;
-
-  @IsOptional()
-  @IsObject()
-  location?: object;
 }

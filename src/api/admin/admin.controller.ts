@@ -26,11 +26,32 @@ import { diskStorage } from 'multer';
 import { CreateUserDto } from './dto/user/create-guard.dto';
 import { UpdateObjectDto } from './dto/object/update-map.dto';
 import { CheckinDto } from './dto/checkin/checkin.dto';
+import { CreateGpsLogDto } from './dto/gps/create-gps-log.dto';
 
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  // Gps
+  @Post('gps')
+  async create(@Body() body: CreateGpsLogDto) {
+    if (!body.userId || !body.location?.lat || !body.location?.lng) {
+      return { error: 'userId va location (lat,lng) kerak' };
+    }
+    return this.adminService.create(body);
+  }
+
+  @UseGuards(AuthGuard, RoleGuard)
+  @Roles(Role.ADMIN, Role.OPERATOR)
+  @Get('gps/:userId')
+  async findLatest(
+    @Param('userId') userId: string,
+    @Query('limit') limit?: string,
+  ) {
+    return this.adminService.findLatest(Number(userId), Number(limit) || 50);
+  }
+
+  // Guard
   @Get('guardlist')
   async guardsList() {
     return this.adminService.guardList();
@@ -51,8 +72,13 @@ export class AdminController {
   @UseGuards(AuthGuard, RoleGuard)
   @Roles(Role.ADMIN, Role.OPERATOR)
   @Get('logs')
-  findAllLogsByMapId(@Query('page') page = 1, @Query('limit') limit = 10) {
+  findAllLogsByMapId(
+    @Query('objectId') objectId: number,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+  ) {
     return this.adminService.findAllLogsWithQuery({
+      objectId: +objectId,
       page: +page,
       limit: +limit,
     });
@@ -110,8 +136,6 @@ export class AdminController {
     return this.adminService.removeGuard(id);
   }
 
-  @UseGuards(AuthGuard, RoleGuard)
-  @Roles(Role.ADMIN)
   @Post('object')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -134,7 +158,7 @@ export class AdminController {
     @UploadedFile() file: Express.Multer.File,
     @Body() body: any,
   ) {
-    return this.adminService.createObject(file, body.name);
+    return this.adminService.createObject(file, body);
   }
 
   @UseGuards(AuthGuard, RoleGuard)
@@ -176,8 +200,8 @@ export class AdminController {
   @UseGuards(AuthGuard, RoleGuard)
   @Roles(Role.ADMIN, Role.OPERATOR)
   @Get('checkpoints')
-  async getCheckpoints() {
-    return this.adminService.findAllCheckpoints();
+  async getCheckpoints(@Query('objectId') objectId: number) {
+    return this.adminService.findAllCheckpoints(+objectId);
   }
 
   @UseGuards(AuthGuard, RoleGuard)

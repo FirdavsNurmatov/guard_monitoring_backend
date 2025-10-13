@@ -44,4 +44,8 @@ export class MonitoringGateway
   sendLog(log: any) {
     this.server.emit('logs', log); // Hamma ulangan frontendlarga yuboradi
   }
+
+  sendGps(gpsLog: any) {
+    this.server.emit('gps', gpsLog);
+  }
 }
