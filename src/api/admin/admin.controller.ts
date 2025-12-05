@@ -86,9 +86,9 @@ export class AdminController {
 
   @UseGuards(AuthGuard, RoleGuard)
   @Roles(Role.ADMIN)
-  @Get('logs')
-  findAllLogs() {
-    return this.adminService.findAllLogs();
+  @Get('monitoringLogs')
+  findAllLogs(@Query('page') page = 1, @Query('limit') limit = 10) {
+    return this.adminService.findAllLogs(+page, +limit);
   }
 
   @UseGuards(AuthGuard, RoleGuard)

@@ -305,18 +305,33 @@ export class AdminService {
     }
   }
 
-  async findAllLogs() {
-    return await this.prisma.monitoringLog.findMany({
-      orderBy: { createdAt: 'desc' },
-      include: {
-        user: {
-          select: { id: true, username: true, role: true },
+  async findAllLogs(page: number, limit: number) {
+    const skip = (page - 1) * limit;
+
+    const [items, total] = await Promise.all([
+      this.prisma.monitoringLog.findMany({
+        skip,
+        take: limit,
+        orderBy: { createdAt: 'desc' },
+        include: {
+          user: {
+            select: { username: true },
+          },
+          checkpoint: {
+            select: { name: true },
+          },
         },
-        checkpoint: {
-          select: { id: true, name: true, normal_time: true, pass_time: true },
-        },
-      },
-    });
+      }),
+
+      this.prisma.monitoringLog.count(),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findAllUsers() {
@@ -479,11 +494,16 @@ export class AdminService {
 
   // Checkpoints
   async findAllCheckpoints(objectId: number) {
-    const res = await this.prisma.checkpoints.findMany({
-      where: { objectId },
-      orderBy: { createdAt: 'asc' },
-    });
-    return { res, length: res.length };
+    try {
+      const res = await this.prisma.checkpoints.findMany({
+        where: { objectId: objectId },
+        orderBy: { createdAt: 'asc' },
+      });
+
+      return { res, length: res.length };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
   async createCheckpoint(dto: CreateCheckpointDto) {
