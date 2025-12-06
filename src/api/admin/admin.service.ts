@@ -256,7 +256,7 @@ export class AdminService {
 
       // 1. Shu objectId ga tegishli checkpointlarni topamiz
       const checkpoints = await this.prisma.checkpoints.findMany({
-        where: { objectId },
+        where: objectId ? { objectId } : undefined,
         select: { id: true },
       });
 
@@ -493,10 +493,10 @@ export class AdminService {
   }
 
   // Checkpoints
-  async findAllCheckpoints(objectId: number) {
+  async findAllCheckpoints(objectId?: number) {
     try {
       const res = await this.prisma.checkpoints.findMany({
-        where: { objectId: objectId },
+        where: objectId ? { objectId } : undefined,
         orderBy: { createdAt: 'asc' },
       });
 
