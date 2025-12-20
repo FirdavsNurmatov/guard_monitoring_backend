@@ -71,78 +71,77 @@ export class AdminService {
     }
   }
 
-  // Other logic
-  @Cron(CronExpression.EVERY_5_SECONDS)
-  async checkGuardStatus() {
-    try {
-      const checkpoints = await this.prisma.checkpoints.findMany({
-        include: {
-          MonitoringLog: {
-            orderBy: { createdAt: 'desc' },
-            take: 1,
-          },
-        },
-      });
+  // @Cron(CronExpression.EVERY_5_SECONDS)
+  // async checkGuardStatus() {
+  //   try {
+  //     const checkpoints = await this.prisma.checkpoints.findMany({
+  //       include: {
+  //         MonitoringLog: {
+  //           orderBy: { createdAt: 'desc' },
+  //           take: 1,
+  //         },
+  //       },
+  //     });
 
-      const now = new Date();
+  //     const now = new Date();
 
-      for (const checkpoint of checkpoints) {
-        const lastLog = checkpoint.MonitoringLog[0];
+  //     for (const checkpoint of checkpoints) {
+  //       const lastLog = checkpoint.MonitoringLog[0];
 
-        if (!lastLog || lastLog.status == 'MISSED') continue;
+  //       if (!lastLog || lastLog.status == 'MISSED') continue;
 
-        const diffMinutes = Math.floor(
-          (now.getTime() - lastLog.createdAt.getTime()) / (1000 * 60) + 0.02,
-        );
+  //       const diffMinutes = Math.floor(
+  //         (now.getTime() - lastLog.createdAt.getTime()) / (1000 * 60) + 0.02,
+  //       );
 
-        let status: 'ON_TIME' | 'LATE' | 'MISSED' = 'ON_TIME';
+  //       let status: 'ON_TIME' | 'LATE' | 'MISSED' = 'ON_TIME';
 
-        if (diffMinutes >= checkpoint.pass_time && lastLog.status == 'LATE') {
-          status = 'MISSED';
-        } else if (diffMinutes >= checkpoint.normal_time) {
-          status = 'LATE';
-        }
+  //       if (diffMinutes >= checkpoint.pass_time && lastLog.status == 'LATE') {
+  //         status = 'MISSED';
+  //       } else if (diffMinutes >= checkpoint.normal_time) {
+  //         status = 'LATE';
+  //       }
 
-        if (status !== 'ON_TIME' && lastLog.status !== status) {
-          const res = await this.prisma.monitoringLog.create({
-            data: {
-              status,
-              checkpointId: checkpoint.id,
-              userId: lastLog.userId,
-            },
-            include: {
-              user: { select: { id: true, login: true, username: true } },
-              checkpoint: {
-                select: {
-                  objectId: true,
-                  id: true,
-                  name: true,
-                  position: true,
-                },
-              },
-            },
-          });
-          this.gateway.sendLog(res);
-        }
+  //       if (status !== 'ON_TIME' && lastLog.status !== status) {
+  //         const res = await this.prisma.monitoringLog.create({
+  //           data: {
+  //             status,
+  //             checkpointId: checkpoint.id,
+  //             userId: lastLog.userId,
+  //           },
+  //           include: {
+  //             user: { select: { id: true, login: true, username: true } },
+  //             checkpoint: {
+  //               select: {
+  //                 objectId: true,
+  //                 id: true,
+  //                 name: true,
+  //                 position: true,
+  //               },
+  //             },
+  //           },
+  //         });
+  //         this.gateway.sendLog(res);
+  //       }
 
-        console.log(
-          `[${new Date().toLocaleTimeString('uz-UZ')}]`,
-          'Checkpoint:',
-          checkpoint.name,
-          '| Diff:',
-          diffMinutes,
-          '| Normal:',
-          checkpoint.normal_time,
-          '| Pass:',
-          checkpoint.pass_time,
-          '| Status:',
-          lastLog.status,
-        );
-      }
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
-  }
+  //       console.log(
+  //         `[${new Date().toLocaleTimeString('uz-UZ')}]`,
+  //         'Checkpoint:',
+  //         checkpoint.name,
+  //         '| Diff:',
+  //         diffMinutes,
+  //         '| Normal:',
+  //         checkpoint.normal_time,
+  //         '| Pass:',
+  //         checkpoint.pass_time,
+  //         '| Status:',
+  //         lastLog.status,
+  //       );
+  //     }
+  //   } catch (error) {
+  //     throw new BadRequestException(error.message);
+  //   }
+  // }
 
   async checkin(data: CheckinDto) {
     const { userId, checkpointCardNum } = data;
@@ -163,32 +162,61 @@ export class AdminService {
 
     const checkpoint = await this.prisma.checkpoints.findFirst({
       where: { card_number: checkpointCardNum },
+      include: {
+        MonitoringLog: {
+          orderBy: { createdAt: 'desc' },
+          take: 1,
+        },
+      },
     });
 
     if (!checkpoint) {
       throw new BadRequestException('Checkpoint does not exist');
     }
 
+    const lastLog = checkpoint.MonitoringLog[0];
+    let status: 'ON_TIME' | 'LATE' | 'MISSED' = 'ON_TIME';
+
+    if (lastLog) {
+      const diffMinutes = Math.floor(
+        (new Date().getTime() - lastLog.createdAt.getTime()) / (1000 * 60),
+      );
+
+      if (diffMinutes >= checkpoint.normal_time) {
+        status = 'LATE';
+
+        if (diffMinutes >= checkpoint.normal_time + checkpoint.pass_time) {
+          status = 'MISSED';
+        }
+      } else {
+        status = 'ON_TIME';
+      }
+    }
+
+    // Agar oxirgi status bilan yangi status bir xil bo‘lsa ham yangi log yaratiladi
     const res = await this.prisma.monitoringLog.create({
       data: {
         userId,
         checkpointId: checkpoint.id,
-        status: CheckpointStatus.ON_TIME,
+        status,
       },
       include: {
         user: { select: { id: true, login: true, username: true } },
         checkpoint: {
-          select: {
-            objectId: true,
-            id: true,
-            name: true,
-            position: true,
-          },
+          select: { objectId: true, id: true, name: true, position: true },
         },
       },
     });
 
     this.gateway.sendLog(res);
+
+    console.log(
+      `[${new Date().toLocaleTimeString('uz-UZ')}] Checkpoint:`,
+      checkpoint.name,
+      '| Status:',
+      status,
+    );
+
     return { success: true, res };
   }
 
