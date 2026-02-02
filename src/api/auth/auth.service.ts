@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { LoginAuthDto } from './dto/login-auth.dto';
 import { ConfigService } from '@nestjs/config';
@@ -19,19 +20,28 @@ export class AuthService {
   ) {}
 
   async signUp(registerAuthDto: RegisterAuthDto) {
-    const ifUserExists = await this.prisma.users.findUnique({
-      where: { login: registerAuthDto.login },
-    });
-
-    if (ifUserExists) {
-      throw new BadRequestException('User already exists');
-    }
-
     try {
+      const ifUserExists = await this.prisma.users.findUnique({
+        where: { login: registerAuthDto.login },
+      });
+      const ifOrganizationExists = await this.prisma.organization.findUnique({
+        where: { id: +registerAuthDto.organizationId },
+      });
+
+      if (ifUserExists) {
+        throw new BadRequestException('User already exists');
+      } else if (!ifOrganizationExists) {
+        throw new NotFoundException('Organization not found');
+      }
+
       const salt = await bcrypt.genSalt();
       const hashedPassword = await bcrypt.hash(registerAuthDto.password, salt);
 
-      const data = { ...registerAuthDto, password: hashedPassword };
+      const data = {
+        ...registerAuthDto,
+        organizationId: +registerAuthDto.organizationId,
+        password: hashedPassword,
+      };
 
       const user = await this.prisma.users.create({ data });
 
@@ -42,6 +52,8 @@ export class AuthService {
         data: result,
       };
     } catch (error) {
+      if (error.message.includes('found'))
+        throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
     }
   }
@@ -52,15 +64,27 @@ export class AuthService {
     try {
       const data = await this.prisma.users.findUnique({
         where: { login },
+        select: {
+          id: true,
+          status: true,
+          login: true,
+          role: true,
+          password: true,
+          organization: true,
+          organizationId: true,
+        },
       });
 
       if (!data) {
         throw new NotFoundException('User not found');
       } else if (data.status == 'INACTIVE') {
         throw new BadRequestException('User is inactive');
+      } else if (data.organization.status == 'INACTIVE') {
+        throw new BadRequestException('Organization is inactive');
       } else if (await bcrypt.compare(password, data.password)) {
         accesToken = await this.generateAccessToken({
           id: data.id,
+          organizationId: data.organizationId,
           login: data.login,
           role: data.role,
           status: data.status,
@@ -89,21 +113,42 @@ export class AuthService {
 
       const data = await this.prisma.users.findUnique({
         where: { login },
+        select: {
+          id: true,
+          login: true,
+          password: true,
+          username: true,
+          status: true,
+          role: true,
+          organization: true,
+          organizationId: true,
+        },
       });
 
       if (!data) throw new NotFoundException('Guard not found');
 
       if (data.status == 'INACTIVE') {
         throw new BadRequestException('Guard is inactive');
+      } else if (data.organization.status == 'INACTIVE') {
+        throw new BadRequestException('Organization is inactive');
       } else if (!(await bcrypt.compare(password, data.password))) {
         throw new NotFoundException('login or password incorrect');
       }
+
+      const token = await this.generateAccessToken({
+        id: data.id,
+        organizationId: data.organizationId,
+        login: data.login,
+        role: data.role,
+        status: data.status,
+      });
 
       return {
         status: 'success',
         id: data.id,
         login: data.login,
         username: data.username,
+        token,
         // guardStatus: data.status,
       };
     } catch (error) {
@@ -114,7 +159,7 @@ export class AuthService {
   }
 
   async generateAccessToken(payload: any): Promise<object> {
-    const accessTokenExpireTime = this.configService.get<string>(
+    const accessTokenExpireTime = this.configService.get(
       'access.accessTokenExpireTime',
     );
 
@@ -127,5 +172,32 @@ export class AuthService {
       access_token: res,
       access_token_expire_time: accessTokenExpireTime,
     };
+  }
+
+  async verifyUser(login: string, password: string) {
+    const user = await this.prisma.users.findUnique({ where: { login } });
+    if (!user) throw new UnauthorizedException('Invalid credentials');
+
+    const valid = await bcrypt.compare(password, user.password);
+    if (!valid) throw new UnauthorizedException('Invalid credentials');
+
+    return user;
+  }
+
+  async verifyUserRefreshToken(refreshToken: string, id: number) {
+    try {
+      const user = await this.prisma.users.findUnique({ where: { id } });
+      // const authenticated = await bcrypt.compare(
+      //   refreshToken,
+      //   user.refreshToken,
+      // );
+      // if (!authenticated) {
+      //   throw new UnauthorizedException('Refresh token is not valid.');
+      // }
+      // return user;
+      return null;
+    } catch (error) {
+      throw new UnauthorizedException(error.message);
+    }
   }
 }

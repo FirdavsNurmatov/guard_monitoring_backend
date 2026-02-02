@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from './public.guard';
 import { ConfigService } from '@nestjs/config';
+import { UserService } from 'src/api/user/user.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
@@ -17,6 +18,7 @@ export class AuthGuard implements CanActivate {
     private readonly configservice: ConfigService,
     private readonly jwtService: JwtService,
     private readonly reflector: Reflector,
+    private readonly userService: UserService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -38,17 +40,22 @@ export class AuthGuard implements CanActivate {
         secret: this.configservice.get<string>('access.accessTokenKey'),
       });
 
-      // Optional
-      if (payload?.status == 'BLOCKED') {
-        throw new Error('BLOCKED');
+      
+      const userData = await this.userService.findOne(payload.id);
+      if (!userData) {
+        throw new BadRequestException('Authorization failed');
       }
-
-      request['user'] = payload;
+      // Optional
+      else if (userData.status === 'INACTIVE') {
+        throw new Error('INACTIVE');
+      }
+      
+      request['user'] = userData;
     } catch (error) {
-      if (error.message != 'BLOCKED') {
+      if (error.message != 'INACTIVE') {
         throw new UnauthorizedException();
       }
-      throw new BadRequestException('BLOCKED');
+      throw new BadRequestException(error.message);
     }
     return true;
   }

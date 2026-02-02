@@ -1,9 +1,9 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { CreateUserDto } from './create-guard.dto';
+import { CreateUserDto } from './create-user.dto';
 import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
 import { Role } from 'src/common/enums';
 
-export class UpdateGuardDto extends PartialType(CreateUserDto) {
+export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
   @IsString()
   @MinLength(2)

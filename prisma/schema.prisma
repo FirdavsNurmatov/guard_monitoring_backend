@@ -10,15 +10,27 @@ generator client {
   provider = "prisma-client-js"
 }
 
+enum Status {
+  ACTIVE
+  INACTIVE
+}
+
+model Organization {
+  id     Int    @id @default(autoincrement())
+  name   String @unique
+  status Status @default(ACTIVE)
+
+  users   Users[]
+  objects Objects[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
 enum Role {
   ADMIN
   OPERATOR
   GUARD
-}
-
-enum Status {
-  ACTIVE
-  INACTIVE
 }
 
 model Users {
@@ -30,11 +42,14 @@ model Users {
   role     Role    @default(GUARD)
   status   Status  @default(ACTIVE)
 
-  logs MonitoringLog[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  GpsLog    GpsLog[]
+
+  logs   MonitoringLog[]
+  GpsLog GpsLog[]
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  organizationId Int
 }
 
 enum CheckpointStatus {
@@ -43,42 +58,39 @@ enum CheckpointStatus {
   MISSED
 }
 
-enum ObjectType {
-  MAP
-  IMAGE
-}
-
 model Objects {
   id Int @id @default(autoincrement())
 
   name     String
   imageUrl String?
-  type     ObjectType @default(IMAGE) // IMAGE, MAP
   position Json? // Leaflet yoki image uchun { lat, lng }
   zoom     Int?
 
-  checkpoints Checkpoints[]
-
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+
+  checkpoints Checkpoints[]
+
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  organizationId Int
 }
 
 model Checkpoints {
   id Int @id @default(autoincrement())
 
-  name        String
-  normal_time Int    @default(15)
-  pass_time   Int    @default(2)
+  name       String
+  normalTime Int    @default(15)
+  passTime   Int    @default(2)
 
   location Json? // { lat, lng }
   position Json? // { xPercent, yPercent }
 
-  card_number String
+  cardNumber String @unique
 
-  Objects  Objects? @relation(fields: [objectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
-  objectId Int?
+  Object   Objects @relation(fields: [objectId], references: [id], onDelete: Cascade, onUpdate: Cascade)
+  objectId Int
 
-  MonitoringLog MonitoringLog[]
+  monitoringLog MonitoringLog[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -101,11 +113,12 @@ model MonitoringLog {
 }
 
 model GpsLog {
-  id        Int      @id @default(autoincrement())
+  id Int @id @default(autoincrement())
 
-  user      Users    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  userId    Int
-  location  Json // { lat: number, lng: number }
+  location Json // { lat: number, lng: number }
+
+  user   Users @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userId Int
 
   createdAt DateTime @default(now())
 }

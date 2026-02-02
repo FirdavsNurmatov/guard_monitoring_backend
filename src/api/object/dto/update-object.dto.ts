@@ -1,16 +1,15 @@
+import { PartialType } from '@nestjs/mapped-types';
+import { CreateObjectDto } from './create-object.dto';
 import {
-  IsString,
-  IsNotEmpty,
-  MinLength,
-  IsEnum,
-  IsOptional,
-  ValidateNested,
   IsNumber,
-  Min,
+  IsOptional,
+  IsString,
   Max,
+  Min,
+  MinLength,
+  ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { ObjectType } from 'src/common/enums';
 
 class PositionDto {
   @IsNumber()
@@ -20,15 +19,15 @@ class PositionDto {
   lng: number;
 }
 
-export class CreateObjectDto {
-  @IsNotEmpty()
+export class UpdateObjectDto extends PartialType(CreateObjectDto) {
+  @IsOptional()
   @IsString()
   @MinLength(1)
-  name: string;
+  name?: string;
 
-  @IsNotEmpty()
-  @IsEnum(ObjectType)
-  type: ObjectType;
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
 
   @IsOptional()
   @ValidateNested()

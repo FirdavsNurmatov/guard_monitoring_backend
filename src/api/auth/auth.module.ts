@@ -12,16 +12,15 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => ({
         global: true,
-        secret: configService.get<string>('accessToken.accessTokenKey'),
+        secret: configService.get<string>('access.accessTokenKey'),
         signOptions: {
-          expiresIn: configService.get<string>(
-            'accessToken.accessTokenExpireTime',
-          ),
+          expiresIn: configService.get('access.accessTokenExpireTime'),
         },
       }),
     }),
   ],
   controllers: [AuthController],
   providers: [AuthService, PrismaService],
+  exports: [JwtModule],
 })
 export class AuthModule {}

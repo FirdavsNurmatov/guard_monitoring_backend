@@ -3,45 +3,66 @@ import * as bcrypt from 'bcrypt';
 
 const prisma = new PrismaClient();
 
+async function createOrganizationWithUsers(
+  orgName: string,
+  suffix: string,
+  password: string,
+) {
+  const organization = await prisma.organization.upsert({
+    where: { name: orgName },
+    update: {},
+    create: {
+      name: orgName,
+      status: 'ACTIVE',
+    },
+  });
+
+  await prisma.users.upsert({
+    where: { login: `admin${suffix}` },
+    update: {},
+    create: {
+      login: `admin${suffix}`,
+      password,
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      organizationId: organization.id,
+    },
+  });
+
+  await prisma.users.upsert({
+    where: { login: `operator${suffix}` },
+    update: {},
+    create: {
+      login: `operator${suffix}`,
+      password,
+      role: 'OPERATOR',
+      status: 'ACTIVE',
+      organizationId: organization.id,
+    },
+  });
+
+  await prisma.users.upsert({
+    where: { login: `guard${suffix}` },
+    update: {},
+    create: {
+      login: `guard${suffix}`,
+      password,
+      role: 'GUARD',
+      status: 'ACTIVE',
+      organizationId: organization.id,
+    },
+  });
+}
+
 async function main() {
   const salt = await bcrypt.genSalt();
   const password = await bcrypt.hash('1111', salt);
 
-  // Admin foydalanuvchi
-  await prisma.users.upsert({
-    where: { login: 'admin' },
-    update: {},
-    create: {
-      login: 'admin',
-      password,
-      role: 'ADMIN',
-      status: 'ACTIVE',
-    },
-  });
+  await createOrganizationWithUsers('Default Organization', '', password);
 
-  // Operator foydalanuvchi
-  await prisma.users.upsert({
-    where: { login: 'operator' },
-    update: {},
-    create: {
-      login: 'operator',
-      password,
-      role: 'OPERATOR',
-      status: 'ACTIVE',
-    },
-  });
+  await createOrganizationWithUsers('Second Organization', '2', password);
 
-  // Guard foydalanuvchi
-  await prisma.users.upsert({
-    where: { login: 'guard' },
-    update: {},
-    create: {
-      login: 'guard',
-      password,
-      role: 'GUARD',
-      status: 'ACTIVE',
-    },
-  });
+  await createOrganizationWithUsers('Third Organization', '3', password);
 }
 
 main()

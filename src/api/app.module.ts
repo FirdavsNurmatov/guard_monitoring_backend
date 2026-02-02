@@ -6,6 +6,9 @@ import { AdminModule } from './admin/admin.module';
 import configuration from 'src/common/config/configuration';
 import { ScheduleModule } from '@nestjs/schedule';
 import { PrismaModule } from 'src/common/prisma/prisma.module';
+import { ObjectModule } from './object/object.module';
+import { CheckpointModule } from './checkpoint/checkpoint.module';
+import { UsersModule } from './user/user.module';
 
 @Module({
   imports: [
@@ -18,6 +21,9 @@ import { PrismaModule } from 'src/common/prisma/prisma.module';
     PrismaModule,
     AuthModule,
     AdminModule,
+    UsersModule,
+    ObjectModule,
+    CheckpointModule,
   ],
   controllers: [],
   providers: [MonitoringGateway],

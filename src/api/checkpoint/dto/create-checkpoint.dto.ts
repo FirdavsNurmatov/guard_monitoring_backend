@@ -48,12 +48,12 @@ export class CreateCheckpointDto {
   @IsOptional()
   @IsNumber()
   @Min(1)
-  normal_time?: number;
+  normalTime?: number;
 
   @IsOptional()
   @IsNumber()
   @Min(1)
-  pass_time?: number;
+  passTime?: number;
 
   @IsOptional()
   @ValidateNested()
@@ -68,5 +68,5 @@ export class CreateCheckpointDto {
   @IsNotEmpty()
   @IsString()
   @MinLength(1)
-  card_number: string;
+  cardNumber: string;
 }
