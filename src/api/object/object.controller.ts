@@ -27,7 +27,7 @@ import { AuthGuard } from 'src/common/guards/auth.guard';
 export class ObjectController {
   constructor(private readonly objectService: ObjectService) {}
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPERADMIN)
   @Post()
   @UseInterceptors(
     FileInterceptor('file', {
@@ -54,13 +54,13 @@ export class ObjectController {
     return this.objectService.createObject(user, file, body);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPERADMIN, Role.ADMIN)
   @Get()
   async findAllObjects(@CurrentUser() user: any) {
     return this.objectService.findAllObjects(user);
   }
 
-  @Roles(Role.ADMIN, Role.OPERATOR)
+  @Roles(Role.SUPERADMIN, Role.ADMIN, Role.OPERATOR)
   @Get(':id')
   async findOneObjectById(
     @CurrentUser() user: any,
@@ -69,7 +69,7 @@ export class ObjectController {
     return this.objectService.findOneObjectById(user, id);
   }
 
-  @Roles(Role.ADMIN, Role.OPERATOR)
+  @Roles(Role.SUPERADMIN)
   @Patch(':id')
   update(
     @CurrentUser() user: any,
@@ -79,7 +79,7 @@ export class ObjectController {
     return this.objectService.updateObjectById(user, id, dto);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPERADMIN)
   @Delete(':id')
   remove(@CurrentUser() user: any, @Param('id', ParseIntPipe) id: number) {
     return this.objectService.removeObjectById(user, id);

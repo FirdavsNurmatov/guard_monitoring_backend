@@ -24,7 +24,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 export class CheckpointController {
   constructor(private readonly checkpointService: CheckpointService) {}
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPERADMIN)
   @Post()
   async createCheckpoint(
     @CurrentUser() user: any,
@@ -42,13 +42,13 @@ export class CheckpointController {
     return this.checkpointService.findAllCheckpoints(user, +objectId);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPERADMIN)
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.checkpointService.findOne(+id);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPERADMIN)
   @Patch(':id')
   async updateCheckpoint(
     @CurrentUser() user: any,
@@ -58,7 +58,7 @@ export class CheckpointController {
     return this.checkpointService.updateCheckpoint(user, id, dto);
   }
 
-  @Roles(Role.ADMIN)
+  @Roles(Role.SUPERADMIN)
   @Delete(':id')
   async deleteCheckpoint(
     @CurrentUser() user: any,

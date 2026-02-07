@@ -24,22 +24,23 @@ export class AuthService {
       const ifUserExists = await this.prisma.users.findUnique({
         where: { login: registerAuthDto.login },
       });
-      const ifOrganizationExists = await this.prisma.organization.findUnique({
-        where: { id: +registerAuthDto.organizationId },
-      });
+      // const ifOrganizationExists = await this.prisma.organization.findUnique({
+      //   where: { id: +registerAuthDto.organizationId },
+      // });
 
       if (ifUserExists) {
         throw new BadRequestException('User already exists');
-      } else if (!ifOrganizationExists) {
-        throw new NotFoundException('Organization not found');
       }
+      //  else if (!ifOrganizationExists) {
+      //   throw new NotFoundException('Organization not found');
+      // }
 
       const salt = await bcrypt.genSalt();
       const hashedPassword = await bcrypt.hash(registerAuthDto.password, salt);
 
       const data = {
         ...registerAuthDto,
-        organizationId: +registerAuthDto.organizationId,
+        // organizationId: +registerAuthDto.organizationId,
         password: hashedPassword,
       };
 
@@ -79,7 +80,10 @@ export class AuthService {
         throw new NotFoundException('User not found');
       } else if (data.status == 'INACTIVE') {
         throw new BadRequestException('User is inactive');
-      } else if (data.organization.status == 'INACTIVE') {
+      } else if (
+        data?.organization?.status == 'INACTIVE' &&
+        data.role !== 'SUPERADMIN'
+      ) {
         throw new BadRequestException('Organization is inactive');
       } else if (await bcrypt.compare(password, data.password)) {
         accesToken = await this.generateAccessToken({
@@ -129,7 +133,7 @@ export class AuthService {
 
       if (data.status == 'INACTIVE') {
         throw new BadRequestException('Guard is inactive');
-      } else if (data.organization.status == 'INACTIVE') {
+      } else if (data?.organization?.status == 'INACTIVE') {
         throw new BadRequestException('Organization is inactive');
       } else if (!(await bcrypt.compare(password, data.password))) {
         throw new NotFoundException('login or password incorrect');

@@ -103,7 +103,7 @@ export class UserService {
       const isUserExists = await this.prisma.users.findUnique({
         where: { login: updateUserDto.login },
       });
-      if (isUserExists) {
+      if (isUserExists && isUserExists.id !== id) {
         throw new BadRequestException('Login duplicate');
       }
 

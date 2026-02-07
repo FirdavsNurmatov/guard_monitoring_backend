@@ -9,6 +9,7 @@ import { PrismaModule } from 'src/common/prisma/prisma.module';
 import { ObjectModule } from './object/object.module';
 import { CheckpointModule } from './checkpoint/checkpoint.module';
 import { UsersModule } from './user/user.module';
+import { SuperadminModule } from './superadmin/superadmin.module';
 
 @Module({
   imports: [
@@ -24,6 +25,7 @@ import { UsersModule } from './user/user.module';
     UsersModule,
     ObjectModule,
     CheckpointModule,
+    SuperadminModule,
   ],
   controllers: [],
   providers: [MonitoringGateway],

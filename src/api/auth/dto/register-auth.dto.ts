@@ -6,9 +6,9 @@ import {
 } from 'class-validator';
 
 export class RegisterAuthDto {
-  @IsNotEmpty()
-  @IsString()
-  organizationId: string;
+  // @IsNotEmpty()
+  // @IsString()
+  // organizationId: string;
 
   @IsNotEmpty()
   @IsString()

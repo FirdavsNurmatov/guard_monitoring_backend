@@ -20,6 +20,16 @@ import { CurrentUser } from '../auth/current-user.decorator';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Get('guardlist')
+  guardsList() {
+    return this.adminService.guardList();
+  }
+
+  @Post('checkin')
+  guardCheckin(@Body() dto: CheckinDto) {
+    return this.adminService.checkin(dto);
+  }
+
   @Post('gps')
   create(@Body() body: CreateGpsLogDto) {
     if (!body.userId || !body.location?.lat || !body.location?.lng) {
@@ -77,15 +87,5 @@ export class AdminController {
   @Get('users')
   findAllUsers(@CurrentUser() user: any) {
     return this.adminService.findAllUsers(user);
-  }
-
-  @Get('guardlist')
-  guardsList() {
-    return this.adminService.guardList();
-  }
-
-  @Post('checkin')
-  guardCheckin(@Body() dto: CheckinDto) {
-    return this.adminService.checkin(dto);
   }
 }

@@ -19,7 +19,7 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @UseGuards(AuthGuard, RoleGuard)
-@Roles(Role.ADMIN)
+@Roles(Role.SUPERADMIN, Role.ADMIN)
 @Controller('user')
 export class UserController {
   constructor(private userService: UserService) {}
@@ -60,5 +60,4 @@ export class UserController {
   deleteUser(@CurrentUser() user: any, @Param('id', ParseIntPipe) id: number) {
     return this.userService.deleteUser(user, id);
   }
-
 }
