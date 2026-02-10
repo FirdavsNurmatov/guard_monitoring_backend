@@ -25,11 +25,13 @@ export class AdminController {
     return this.adminService.guardList();
   }
 
+  @UseGuards(AuthGuard)
   @Post('checkin')
   guardCheckin(@Body() dto: CheckinDto) {
     return this.adminService.checkin(dto);
   }
 
+  @UseGuards(AuthGuard)
   @Post('gps')
   create(@Body() body: CreateGpsLogDto) {
     if (!body.userId || !body.location?.lat || !body.location?.lng) {

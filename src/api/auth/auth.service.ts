@@ -116,7 +116,7 @@ export class AuthService {
       const { login, password } = loginAuthDto;
 
       const data = await this.prisma.users.findUnique({
-        where: { login },
+        where: { login, role: 'GUARD' },
         select: {
           id: true,
           login: true,
@@ -136,7 +136,7 @@ export class AuthService {
       } else if (data?.organization?.status == 'INACTIVE') {
         throw new BadRequestException('Organization is inactive');
       } else if (!(await bcrypt.compare(password, data.password))) {
-        throw new NotFoundException('login or password incorrect');
+        throw new NotFoundException('Login yoki parol xato');
       }
 
       const token = await this.generateAccessToken({
