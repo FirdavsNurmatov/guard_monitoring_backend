@@ -15,30 +15,269 @@ import { UpdateObjectDto } from '../object/dto/update-object.dto';
 import { UpdateCheckpointDto } from '../checkpoint/dto/update-checkpoint.dto';
 import { Prisma } from '@prisma/client';
 import { CreateCheckpointDto } from '../checkpoint/dto/create-checkpoint.dto';
-import { CreateObjectDto } from './dto/object/create-object.dto';
+import * as path from 'path';
+import * as fs from 'fs';
 
 @Injectable()
 export class SuperadminService {
   constructor(private prisma: PrismaService) {}
 
-  create(createSuperadminDto: CreateSuperadminDto) {
-    return 'This action adds a new superadmin';
+  async uploadObjectImage(file: Express.Multer.File | undefined, id: number) {
+    if (!file) throw new BadRequestException('File is required');
+    try {
+      const object = await this.prisma.objects.findUnique({
+        where: { id },
+      });
+      if (!object) {
+        const trashImage = path.join(
+          __dirname,
+          '..',
+          '..',
+          '..',
+          '..',
+          'uploads',
+          'objects',
+          file.filename,
+        );
+        if (fs.existsSync(trashImage)) {
+          await fs.promises.unlink(trashImage);
+        }
+        throw new NotFoundException('Object not found');
+      }
+
+      if (object.imageUrl) {
+        const oldImagePath = path.join(
+          __dirname,
+          '..',
+          '..',
+          '..',
+          '..',
+          object.imageUrl,
+        );
+
+        if (fs.existsSync(oldImagePath)) {
+          await fs.promises.unlink(oldImagePath);
+        }
+      }
+
+      const data = await this.prisma.objects.update({
+        where: { id },
+        data: { imageUrl: `/uploads/objects/${file.filename}` },
+      });
+
+      return data.imageUrl;
+    } catch (error) {
+      if (error.message.includes('found'))
+        throw new NotFoundException(error.message);
+      throw new BadRequestException(error.message);
+    }
   }
 
-  findAll() {
-    return `This action returns all superadmin`;
+  async removeObjectImage(id: number) {
+    try {
+      const object = await this.prisma.objects.findUnique({
+        where: { id },
+      });
+      if (!object) throw new NotFoundException('Object not found');
+
+      if (object.imageUrl) {
+        const oldImagePath = path.join(
+          __dirname,
+          '..',
+          '..',
+          '..',
+          '..',
+          object.imageUrl,
+        );
+
+        if (fs.existsSync(oldImagePath)) {
+          await fs.promises.unlink(oldImagePath);
+        }
+      }
+
+      await this.prisma.objects.update({
+        where: { id },
+        data: { imageUrl: null },
+      });
+
+      return { status: 'success' };
+    } catch (error) {
+      if (error.message.includes('found'))
+        throw new NotFoundException(error.message);
+      throw new BadRequestException(error.message);
+    }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} superadmin`;
+  async createObject(
+    file: Express.Multer.File | undefined,
+    createObjectDto: any,
+  ) {
+    try {
+      const { name, position, zoom, organizationId } = createObjectDto;
+
+      const isOrganizationExist = await this.prisma.organization.findUnique({
+        where: { id: +organizationId },
+      });
+      if (!isOrganizationExist)
+        throw new NotFoundException('Organization not found');
+
+      // 🔹 position parse qilinadi agar string bo'lsa
+      const parsedPosition =
+        typeof position === 'string' ? JSON.parse(position) : position;
+
+      const data: any = {
+        name,
+        organizationId: +organizationId,
+        position: parsedPosition ?? undefined,
+        zoom: zoom != null ? Number(zoom) : null, // 🔹 bu yerda string -> number
+      };
+
+      // 🔹 Rasm URL qo‘shish
+      if (file) {
+        data.imageUrl = `/uploads/objects/${file.filename}`;
+      }
+
+      // 🔹 Prisma orqali yaratish
+      const created = await this.prisma.objects.create({ data });
+      return created;
+    } catch (error) {
+      if (error.message.includes('found'))
+        throw new NotFoundException(error.message);
+      throw new BadRequestException(error.message);
+    }
   }
 
-  update(id: number, updateSuperadminDto: UpdateSuperadminDto) {
-    return `This action updates a #${id} superadmin`;
+  async findAllObjects(page = 1, limit = 10) {
+    try {
+      const skip = (page - 1) * limit;
+
+      const [data, total] = await this.prisma.$transaction([
+        this.prisma.objects.findMany({
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+        }),
+        this.prisma.objects.count(),
+      ]);
+
+      return {
+        data,
+        total,
+        page,
+        limit,
+      };
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} superadmin`;
+  async findOneObject(id: number) {
+    try {
+      const data = await this.prisma.objects.findUnique({
+        where: { id },
+        include: { checkpoints: true },
+      });
+      return data;
+    } catch (error) {
+      throw new NotFoundException('Object not found');
+    }
+  }
+
+  async updateObject(id: number, dto: UpdateObjectDto) {
+    try {
+      const data = await this.prisma.objects.update({
+        where: { id },
+        data: {
+          ...dto,
+          position: dto.position ? { ...dto.position } : undefined,
+        },
+      });
+
+      return data;
+    } catch (error) {
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async removeObject(id: number) {
+    try {
+      const data = await this.prisma.objects.delete({
+        where: { id },
+      });
+
+      return data;
+    } catch (error) {
+      throw new NotFoundException('Object not found');
+    }
+  }
+
+  async createCheckpoint(dto: CreateCheckpointDto) {
+    try {
+      const objectData = await this.prisma.objects.findUnique({
+        where: { id: dto.objectId },
+      });
+      if (!objectData) {
+        throw new NotFoundException('Object not found');
+      }
+
+      const res = await this.prisma.checkpoints.create({
+        data: {
+          ...dto,
+          position: dto.position as unknown as Prisma.InputJsonValue,
+          location: dto.location as unknown as Prisma.InputJsonValue,
+        },
+      });
+      return res;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new BadRequestException(
+            'Duplicate checkpoint card number:' + dto.cardNumber,
+          );
+        }
+      } else if (error.message.includes('found'))
+        throw new NotFoundException(error.message);
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async updateCheckpoint(id: number, updateCheckpointDto: UpdateCheckpointDto) {
+    try {
+      const objectData = await this.prisma.objects.findUnique({
+        where: {
+          id: updateCheckpointDto?.objectId,
+        },
+      });
+      if (!objectData) {
+        throw new NotFoundException('Object not found');
+      }
+
+      const res = await this.prisma.checkpoints.update({
+        where: { id },
+        data: {
+          ...updateCheckpointDto,
+          position: updateCheckpointDto.position
+            ? { ...updateCheckpointDto.position }
+            : undefined,
+          location: updateCheckpointDto.location
+            ? { ...updateCheckpointDto.location }
+            : undefined,
+        },
+      });
+
+      return res;
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          throw new BadRequestException('Duplicate checkpoint card number');
+        }
+        if (error.code === 'P2025') {
+          throw new NotFoundException(`Checkpoint with id ${id} not found`);
+        }
+      } else if (error.message.includes('found'))
+        throw new NotFoundException(error.message);
+      throw new BadRequestException(error.message);
+    }
   }
 
   async createAdmin(createAdminDto: CreateAdminDto) {
@@ -242,175 +481,23 @@ export class SuperadminService {
     }
   }
 
-  async createObject(
-    file: Express.Multer.File | undefined,
-    createObjectDto: any,
-  ) {
-    try {
-      const { name, position, zoom, organizationId } = createObjectDto;
-
-      const isOrganizationExist = await this.prisma.organization.findUnique({
-        where: { id: +organizationId },
-      });
-      if (!isOrganizationExist)
-        throw new NotFoundException('Organization not found');
-
-      // 🔹 position parse qilinadi agar string bo'lsa
-      const parsedPosition =
-        typeof position === 'string' ? JSON.parse(position) : position;
-
-
-      const data: any = {
-        name,
-        organizationId: +organizationId,
-        position: parsedPosition ?? undefined,
-        zoom: zoom != null ? Number(zoom) : null, // 🔹 bu yerda string -> number
-      };
-
-      // 🔹 Rasm URL qo‘shish
-      if (file) {
-        data.imageUrl = `/uploads/objects/${file.filename}`;
-      }
-
-      // 🔹 Prisma orqali yaratish
-      const created = await this.prisma.objects.create({ data });
-      return created;
-    } catch (error) {
-      if (error.message.includes('found')) throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
-    }
+  create(createSuperadminDto: CreateSuperadminDto) {
+    return 'This action adds a new superadmin';
   }
 
-  async findAllObjects(page = 1, limit = 10) {
-    try {
-      const skip = (page - 1) * limit;
-
-      const [data, total] = await this.prisma.$transaction([
-        this.prisma.objects.findMany({
-          skip,
-          take: limit,
-          orderBy: { createdAt: 'desc' },
-        }),
-        this.prisma.objects.count(),
-      ]);
-
-      return {
-        data,
-        total,
-        page,
-        limit,
-      };
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+  findAll() {
+    return `This action returns all superadmin`;
   }
 
-  async findOneObject(id: number) {
-    try {
-      const data = await this.prisma.objects.findUnique({
-        where: { id },
-        include: { checkpoints: true },
-      });
-      return data;
-    } catch (error) {
-      throw new NotFoundException('Object not found');
-    }
+  findOne(id: number) {
+    return `This action returns a #${id} superadmin`;
   }
 
-  async updateObject(id: number, dto: UpdateObjectDto) {
-    try {
-      const data = await this.prisma.objects.update({
-        where: { id },
-        data: {
-          ...dto,
-          position: dto.position ? { ...dto.position } : undefined,
-        },
-      });
-
-      return data;
-    } catch (error) {
-      throw new BadRequestException(error.message);
-    }
+  update(id: number, updateSuperadminDto: UpdateSuperadminDto) {
+    return `This action updates a #${id} superadmin`;
   }
 
-  async removeObject(id: number) {
-    try {
-      const data = await this.prisma.objects.delete({
-        where: { id },
-      });
-
-      return data;
-    } catch (error) {
-      throw new NotFoundException('Object not found');
-    }
-  }
-
-  async createCheckpoint(dto: CreateCheckpointDto) {
-    try {
-      const objectData = await this.prisma.objects.findUnique({
-        where: { id: dto.objectId },
-      });
-      if (!objectData) {
-        throw new NotFoundException('Object not found');
-      }
-
-      const res = await this.prisma.checkpoints.create({
-        data: {
-          ...dto,
-          position: dto.position as unknown as Prisma.InputJsonValue,
-          location: dto.location as unknown as Prisma.InputJsonValue,
-        },
-      });
-      return res;
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new BadRequestException(
-            'Duplicate checkpoint card number:' + dto.cardNumber,
-          );
-        }
-      } else if (error.message.includes('found'))
-        throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
-    }
-  }
-
-  async updateCheckpoint(id: number, updateCheckpointDto: UpdateCheckpointDto) {
-    try {
-      const objectData = await this.prisma.objects.findUnique({
-        where: {
-          id: updateCheckpointDto?.objectId,
-        },
-      });
-      if (!objectData) {
-        throw new NotFoundException('Object not found');
-      }
-
-      const res = await this.prisma.checkpoints.update({
-        where: { id },
-        data: {
-          ...updateCheckpointDto,
-          position: updateCheckpointDto.position
-            ? { ...updateCheckpointDto.position }
-            : undefined,
-          location: updateCheckpointDto.location
-            ? { ...updateCheckpointDto.location }
-            : undefined,
-        },
-      });
-
-      return res;
-    } catch (error) {
-      if (error instanceof Prisma.PrismaClientKnownRequestError) {
-        if (error.code === 'P2002') {
-          throw new BadRequestException('Duplicate checkpoint card number');
-        }
-        if (error.code === 'P2025') {
-          throw new NotFoundException(`Checkpoint with id ${id} not found`);
-        }
-      } else if (error.message.includes('found'))
-        throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
-    }
+  remove(id: number) {
+    return `This action removes a #${id} superadmin`;
   }
 }

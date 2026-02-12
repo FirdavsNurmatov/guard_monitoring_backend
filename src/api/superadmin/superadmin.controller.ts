@@ -38,6 +38,60 @@ import { CreateObjectDto } from './dto/object/create-object.dto';
 export class SuperadminController {
   constructor(private readonly superadminService: SuperadminService) {}
 
+  @Post('object/:id/image')
+  @UseInterceptors(
+    FileInterceptor('file', {
+      storage: diskStorage({
+        destination: (req, file, cb) => {
+          cb(
+            null,
+            join(__dirname, '..', '..', '..', '..', 'uploads', 'objects'),
+          );
+        },
+        filename: (req, file, cb) => {
+          const uniqueSuffix =
+            Date.now() + '-' + Math.round(Math.random() * 1e9);
+          cb(null, uniqueSuffix + extname(file.originalname));
+        },
+      }),
+
+      fileFilter: (req, file, cb) => {
+        // 1️⃣ mimetype tekshirish
+        if (!file.mimetype.startsWith('image/')) {
+          return cb(
+            new BadRequestException('Faqat rasm fayllariga ruxsat beriladi'),
+            false,
+          );
+        }
+
+        // 2️⃣ extension tekshirish (double protection)
+        const allowedExt = ['.jpg', '.jpeg', '.png', '.webp', '.heic'];
+        const ext = extname(file.originalname).toLowerCase();
+
+        if (!allowedExt.includes(ext)) {
+          return cb(new BadRequestException('Noto‘g‘ri rasm formati'), false);
+        }
+
+        cb(null, true);
+      },
+
+      limits: {
+        fileSize: 50 * 1024 * 1024, // 50MB
+      },
+    }),
+  )
+  uploadObjectImage(
+    @UploadedFile() file: Express.Multer.File,
+    @Param('id') id: string,
+  ) {
+    return this.superadminService.uploadObjectImage(file, +id);
+  }
+
+  @Delete('object/:id/image')
+  removeObjectImage(@Param('id') id: string) {
+    return this.superadminService.removeObjectImage(+id);
+  }
+
   @Post('organization')
   createOrganization(@Body() createOrganizationDto: CreateOrganizationDto) {
     return this.superadminService.createOrganization(createOrganizationDto);
