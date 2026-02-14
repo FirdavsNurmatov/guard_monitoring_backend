@@ -6,6 +6,7 @@ import {
   Param,
   UseGuards,
   Query,
+  BadRequestException,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
@@ -23,6 +24,7 @@ export class AdminController {
   @Get('guardlist/:organization_id')
   guardsList(@Param('organization_id') org_id: string) {
     console.log(org_id);
+    if (!org_id) throw new BadRequestException('Organization id is not provided');
     return this.adminService.guardList(+org_id);
   }
 
