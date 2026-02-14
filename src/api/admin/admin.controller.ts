@@ -20,7 +20,7 @@ import { CurrentUser } from '../auth/current-user.decorator';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Get('guardlist')
+  @Get('guardlist/:organization_id')
   guardsList(@Param('organization_id') org_id: string) {
     console.log(org_id);
     return this.adminService.guardList(+org_id);
