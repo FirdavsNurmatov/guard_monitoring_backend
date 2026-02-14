@@ -21,8 +21,8 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('guardlist')
-  guardsList() {
-    return this.adminService.guardList();
+  guardsList(@Param('organization_id') org_id: string) {
+    return this.adminService.guardList(+org_id);
   }
 
   @UseGuards(AuthGuard)

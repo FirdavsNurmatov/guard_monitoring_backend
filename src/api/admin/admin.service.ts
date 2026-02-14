@@ -164,15 +164,22 @@ export class AdminService {
     return { success: true, res };
   }
 
-  async guardList() {
+  async guardList(org_id: number) {
     try {
+      const data = this.prisma.organization.findUnique({
+        where: { id: org_id },
+      });
+      if (!data) throw new NotFoundException('Organization not found');
+
       const res = await this.prisma.users.findMany({
-        where: { role: 'GUARD' },
+        where: { role: 'GUARD', organizationId: org_id },
         select: { login: true, username: true },
       });
 
       return res;
     } catch (error) {
+      if (error.message.includes('found'))
+        throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
     }
   }
@@ -343,5 +350,4 @@ export class AdminService {
       throw new BadRequestException(error.message);
     }
   }
-
 }
