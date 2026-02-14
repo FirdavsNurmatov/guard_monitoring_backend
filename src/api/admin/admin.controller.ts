@@ -21,10 +21,11 @@ import { CurrentUser } from '../auth/current-user.decorator';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  @Get('guardlist/:organization_id')
-  guardsList(@Param('organization_id') org_id: string) {
+  @Get('guardlist')
+  guardsList(@Query('organization_id') org_id: string) {
     console.log(org_id);
-    if (!org_id) throw new BadRequestException('Organization id is not provided');
+    if (!org_id)
+      throw new BadRequestException('Organization id is not provided');
     return this.adminService.guardList(+org_id);
   }
 
