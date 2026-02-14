@@ -167,20 +167,25 @@ export class AdminService {
 
   async guardList(org_id: number) {
     try {
-      const data = this.prisma.organization.findUnique({
+      const organization = await this.prisma.organization.findUnique({
         where: { id: org_id },
       });
-      if (!data) throw new NotFoundException('Organization not found');
 
-      const res = await this.prisma.users.findMany({
-        where: { role: 'GUARD', organizationId: org_id },
-        select: { login: true, username: true },
+      if (!organization) {
+        throw new NotFoundException('Organization not found');
+      }
+
+      return this.prisma.users.findMany({
+        where: {
+          role: 'GUARD',
+          organizationId: org_id,
+        },
+        select: {
+          login: true,
+          username: true,
+        },
       });
-
-      console.log(res);
-      return res;
     } catch (error) {
-      console.log(error);
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);

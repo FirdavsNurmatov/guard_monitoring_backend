@@ -7,6 +7,7 @@ import {
   UseGuards,
   Query,
   BadRequestException,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
@@ -22,11 +23,8 @@ export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
   @Get('guardlist')
-  guardsList(@Query('organization_id') org_id: string) {
-    console.log(org_id);
-    if (!org_id)
-      throw new BadRequestException('Organization id is not provided');
-    return this.adminService.guardList(+org_id);
+  guardsList(@Query('organization_id', ParseIntPipe) org_id: number) {
+    return this.adminService.guardList(org_id);
   }
 
   @UseGuards(AuthGuard)
