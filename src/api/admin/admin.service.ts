@@ -9,6 +9,7 @@ import { Prisma } from '@prisma/client';
 import { CheckinDto } from './dto/checkin/checkin.dto';
 import { MonitoringGateway } from '../monitoring/monitoring.gateway';
 import { CreateGpsLogDto } from './dto/gps/create-gps-log.dto';
+import { error } from 'console';
 
 @Injectable()
 export class AdminService {
@@ -176,8 +177,10 @@ export class AdminService {
         select: { login: true, username: true },
       });
 
+      console.log(res);
       return res;
     } catch (error) {
+      console.log(error);
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);

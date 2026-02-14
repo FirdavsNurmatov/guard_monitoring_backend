@@ -22,6 +22,7 @@ export class AdminController {
 
   @Get('guardlist')
   guardsList(@Param('organization_id') org_id: string) {
+    console.log(org_id);
     return this.adminService.guardList(+org_id);
   }
 
