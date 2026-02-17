@@ -304,6 +304,11 @@ export class AdminService {
 
       const [items, total] = await Promise.all([
         this.prisma.monitoringLog.findMany({
+          where: {
+            checkpoint: {
+              objectId: objectId,
+            },
+          },
           skip,
           take: limit,
           orderBy: { createdAt: 'desc' },
@@ -317,7 +322,9 @@ export class AdminService {
           },
         }),
 
-        this.prisma.monitoringLog.count(),
+        this.prisma.monitoringLog.count({
+          where: { checkpoint: { objectId: objectId } },
+        }),
       ]);
 
       return {
