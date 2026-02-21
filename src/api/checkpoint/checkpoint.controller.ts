@@ -1,18 +1,5 @@
-import {
-  Controller,
-  Get,
-  Post,
-  Body,
-  Patch,
-  Param,
-  Delete,
-  UseGuards,
-  Query,
-  ParseIntPipe,
-} from '@nestjs/common';
+import { Controller, Get, Param, UseGuards, Query } from '@nestjs/common';
 import { CheckpointService } from './checkpoint.service';
-import { CreateCheckpointDto } from './dto/create-checkpoint.dto';
-import { UpdateCheckpointDto } from './dto/update-checkpoint.dto';
 import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RoleGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorators/role.decorator';
@@ -23,15 +10,6 @@ import { CurrentUser } from '../auth/current-user.decorator';
 @Controller('checkpoint')
 export class CheckpointController {
   constructor(private readonly checkpointService: CheckpointService) {}
-
-  @Roles(Role.SUPERADMIN)
-  @Post()
-  async createCheckpoint(
-    @CurrentUser() user: any,
-    @Body() dto: CreateCheckpointDto,
-  ) {
-    return this.checkpointService.createCheckpoint(user, dto);
-  }
 
   @Roles(Role.ADMIN, Role.OPERATOR)
   @Get()
@@ -46,24 +24,5 @@ export class CheckpointController {
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.checkpointService.findOne(+id);
-  }
-
-  @Roles(Role.SUPERADMIN)
-  @Patch(':id')
-  async updateCheckpoint(
-    @CurrentUser() user: any,
-    @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateCheckpointDto,
-  ) {
-    return this.checkpointService.updateCheckpoint(user, id, dto);
-  }
-
-  @Roles(Role.SUPERADMIN)
-  @Delete(':id')
-  async deleteCheckpoint(
-    @CurrentUser() user: any,
-    @Param('id', ParseIntPipe) id: number,
-  ) {
-    return this.checkpointService.deleteCheckpoint(user, id);
   }
 }

@@ -3,20 +3,18 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { CreateSuperadminDto } from './dto/create-superadmin.dto';
-import { UpdateSuperadminDto } from './dto/update-superadmin.dto';
-import { CreateOrganizationDto } from './dto/organization/create-organization.dto';
-import { PrismaService } from 'src/common/prisma/prisma.service';
-import { UpdateOrganizationDto } from './dto/organization/edit-organization.dto';
-import { CreateAdminDto } from './dto/admin/create-admin.dto';
-import * as bcrypt from 'bcrypt';
-import { UpdateAdminDto } from './dto/admin/update-admin.dto';
-import { UpdateObjectDto } from '../object/dto/update-object.dto';
-import { UpdateCheckpointDto } from '../checkpoint/dto/update-checkpoint.dto';
 import { Prisma } from '@prisma/client';
-import { CreateCheckpointDto } from '../checkpoint/dto/create-checkpoint.dto';
+import { PrismaService } from 'src/common/prisma/prisma.service';
+import * as bcrypt from 'bcrypt';
 import * as path from 'path';
 import * as fs from 'fs';
+import { CreateOrganizationDto } from './dto/organization/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/organization/edit-organization.dto';
+import { CreateAdminDto } from './dto/admin/create-admin.dto';
+import { UpdateAdminDto } from './dto/admin/update-admin.dto';
+import { UpdateObjectDto } from './dto/object/update-object.dto';
+import { CreateCheckpointDto } from './dto/checkpoint/create-checkpoint.dto';
+import { UpdateCheckpointDto } from './dto/checkpoint/update-checkpoint.dto';
 
 @Injectable()
 export class SuperadminService {
@@ -269,12 +267,29 @@ export class SuperadminService {
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new BadRequestException('Duplicate checkpoint card number');
+          throw new BadRequestException({
+            message: 'Duplicate checkpoint card number',
+            cardNumber: updateCheckpointDto.cardNumber,
+          });
         }
         if (error.code === 'P2025') {
           throw new NotFoundException(`Checkpoint with id ${id} not found`);
         }
       } else if (error.message.includes('found'))
+        throw new NotFoundException(error.message);
+      throw new BadRequestException(error.message);
+    }
+  }
+
+  async deleteCheckpoint(id: number) {
+    try {
+      const data = await this.prisma.checkpoints.findUnique({
+        where: { id },
+      });
+      if (!data) throw new NotFoundException('Checkpoint not found');
+      return await this.prisma.checkpoints.delete({ where: { id } });
+    } catch (error) {
+      if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
     }
@@ -479,25 +494,5 @@ export class SuperadminService {
     } catch (error) {
       throw new BadRequestException(error.message);
     }
-  }
-
-  create(createSuperadminDto: CreateSuperadminDto) {
-    return 'This action adds a new superadmin';
-  }
-
-  findAll() {
-    return `This action returns all superadmin`;
-  }
-
-  findOne(id: number) {
-    return `This action returns a #${id} superadmin`;
-  }
-
-  update(id: number, updateSuperadminDto: UpdateSuperadminDto) {
-    return `This action updates a #${id} superadmin`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} superadmin`;
   }
 }

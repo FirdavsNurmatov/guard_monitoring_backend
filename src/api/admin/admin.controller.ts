@@ -6,7 +6,6 @@ import {
   Param,
   UseGuards,
   Query,
-  BadRequestException,
   ParseIntPipe,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';

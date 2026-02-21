@@ -4,12 +4,11 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { PrismaService } from 'src/common/prisma/prisma.service';
 import { Prisma } from '@prisma/client';
-import { CheckinDto } from './dto/checkin/checkin.dto';
+import { PrismaService } from 'src/common/prisma/prisma.service';
 import { MonitoringGateway } from '../monitoring/monitoring.gateway';
+import { CheckinDto } from './dto/checkin/checkin.dto';
 import { CreateGpsLogDto } from './dto/gps/create-gps-log.dto';
-import { error } from 'console';
 
 @Injectable()
 export class AdminService {

@@ -40,7 +40,6 @@ export class AuthGuard implements CanActivate {
         secret: this.configservice.get<string>('access.accessTokenKey'),
       });
 
-      
       const userData = await this.userService.findOne(payload.id);
       if (!userData) {
         throw new BadRequestException('Authorization failed');
@@ -49,7 +48,7 @@ export class AuthGuard implements CanActivate {
       else if (userData.status === 'INACTIVE') {
         throw new Error('INACTIVE');
       }
-      
+
       request['user'] = userData;
     } catch (error) {
       if (error.message != 'INACTIVE') {

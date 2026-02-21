@@ -13,24 +13,22 @@ import {
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
-import { SuperadminService } from './superadmin.service';
-import { CreateSuperadminDto } from './dto/create-superadmin.dto';
-import { UpdateSuperadminDto } from './dto/update-superadmin.dto';
-import { CreateOrganizationDto } from './dto/organization/create-organization.dto';
-import { RoleGuard } from 'src/common/guards/role.guard';
 import { AuthGuard } from 'src/common/guards/auth.guard';
+import { RoleGuard } from 'src/common/guards/role.guard';
 import { Role } from 'src/common/enums';
 import { Roles } from 'src/common/decorators/role.decorator';
-import { UpdateOrganizationDto } from './dto/organization/edit-organization.dto';
-import { CreateAdminDto } from './dto/admin/create-admin.dto';
-import { UpdateAdminDto } from './dto/admin/update-admin.dto';
-import { UpdateCheckpointDto } from './dto/checkpoint/update-checkpoint.dto';
-import { CreateCheckpointDto } from './dto/checkpoint/create-checkpoint.dto';
-import { UpdateObjectDto } from './dto/object/update-object.dto';
+import { SuperadminService } from './superadmin.service';
 import { extname, join } from 'path';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
+import { CreateOrganizationDto } from './dto/organization/create-organization.dto';
+import { UpdateOrganizationDto } from './dto/organization/edit-organization.dto';
+import { CreateAdminDto } from './dto/admin/create-admin.dto';
+import { UpdateAdminDto } from './dto/admin/update-admin.dto';
+import { CreateCheckpointDto } from './dto/checkpoint/create-checkpoint.dto';
+import { UpdateCheckpointDto } from './dto/checkpoint/update-checkpoint.dto';
 import { CreateObjectDto } from './dto/object/create-object.dto';
+import { UpdateObjectDto } from './dto/object/update-object.dto';
 
 @UseGuards(AuthGuard, RoleGuard)
 @Roles(Role.SUPERADMIN)
@@ -219,6 +217,11 @@ export class SuperadminController {
     return this.superadminService.updateCheckpoint(id, updateCheckpointDto);
   }
 
+  @Delete('checkpoint/:id')
+  deleteCheckpoint(@Param('id', ParseIntPipe) id: number) {
+    return this.superadminService.deleteCheckpoint(id);
+  }
+
   @Post('admin')
   createAdmin(@Body() createAdminDto: CreateAdminDto) {
     return this.superadminService.createAdmin(createAdminDto);
@@ -237,33 +240,5 @@ export class SuperadminController {
   @Delete('admin/:id')
   removeAdmin(@Param('id') id: string) {
     return this.superadminService.removeAdmin(+id);
-  }
-
-  @Post()
-  create(@Body() createSuperadminDto: CreateSuperadminDto) {
-    return this.superadminService.create(createSuperadminDto);
-  }
-
-  @Get()
-  findAll() {
-    return this.superadminService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.superadminService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(
-    @Param('id') id: string,
-    @Body() updateSuperadminDto: UpdateSuperadminDto,
-  ) {
-    return this.superadminService.update(+id, updateSuperadminDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.superadminService.remove(+id);
   }
 }

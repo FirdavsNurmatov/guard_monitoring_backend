@@ -5,8 +5,6 @@ import {
   IsOptional,
   ValidateNested,
   IsNumber,
-  Min,
-  Max,
 } from 'class-validator';
 import { Transform, Type } from 'class-transformer';
 
