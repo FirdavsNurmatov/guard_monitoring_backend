@@ -80,22 +80,22 @@ export class AuthService {
         throw new NotFoundException('User not found');
       } else if (data.status == 'INACTIVE') {
         throw new BadRequestException('User is inactive');
+      } else if (!(await bcrypt.compare(password, data.password))) {
+        throw new NotFoundException('username or password incorrect!');
       } else if (
         data?.organization?.status == 'INACTIVE' &&
         data.role !== 'SUPERADMIN'
       ) {
         throw new BadRequestException('Organization is inactive');
-      } else if (await bcrypt.compare(password, data.password)) {
-        accesToken = await this.generateAccessToken({
-          id: data.id,
-          organizationId: data.organizationId,
-          login: data.login,
-          role: data.role,
-          status: data.status,
-        });
-      } else {
-        throw new NotFoundException('username or password incorrect!');
       }
+
+      accesToken = await this.generateAccessToken({
+        id: data.id,
+        organizationId: data.organizationId,
+        login: data.login,
+        role: data.role,
+        status: data.status,
+      });
 
       return {
         status_code: 200,
