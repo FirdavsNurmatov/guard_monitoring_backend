@@ -58,6 +58,19 @@ async function main() {
   const salt = await bcrypt.genSalt();
   const password = await bcrypt.hash('1111', salt);
 
+  const superAdminPassword = await bcrypt.hash('Addayka115', salt);
+
+  await prisma.users.upsert({
+    where: { login: 'SuperAdmin' },
+    update: {},
+    create: {
+      login: 'SuperAdmin',
+      password: superAdminPassword,
+      role: 'SUPERADMIN',
+      status: 'ACTIVE',
+    },
+  });
+
   await createOrganizationWithUsers('Default Organization', '', password);
 
   await createOrganizationWithUsers('Second Organization', '2', password);

@@ -1,3 +1,4 @@
+import { CheckpointStyle } from '@prisma/client';
 import { Type } from 'class-transformer';
 import {
   IsString,
@@ -8,6 +9,7 @@ import {
   ValidateNested,
   MinLength,
   IsNotEmpty,
+  IsEnum,
 } from 'class-validator';
 
 class PositionDto {
@@ -54,6 +56,10 @@ export class CreateCheckpointDto {
   @IsNumber()
   @Min(1)
   passTime?: number;
+
+  @IsOptional()
+  @IsEnum(CheckpointStyle)
+  infoStyle: CheckpointStyle;
 
   @IsOptional()
   @ValidateNested()

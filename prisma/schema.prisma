@@ -53,12 +53,6 @@ model Users {
   organizationId Int?
 }
 
-enum CheckpointStatus {
-  ON_TIME
-  LATE
-  MISSED
-}
-
 model Objects {
   id Int @id @default(autoincrement())
 
@@ -76,12 +70,20 @@ model Objects {
   organizationId Int
 }
 
+enum CheckpointStyle {
+  TOP
+  BOTTOM
+  LEFT
+  RIGHT
+}
+
 model Checkpoints {
   id Int @id @default(autoincrement())
 
   name       String
-  normalTime Int    @default(15)
-  passTime   Int    @default(2)
+  normalTime Int             @default(15)
+  passTime   Int             @default(2)
+  infoStyle  CheckpointStyle @default(TOP)
 
   location Json? // { lat, lng }
   position Json? // { xPercent, yPercent }
@@ -95,6 +97,12 @@ model Checkpoints {
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+enum CheckpointStatus {
+  ON_TIME
+  LATE
+  MISSED
 }
 
 model MonitoringLog {

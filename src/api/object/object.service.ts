@@ -41,6 +41,7 @@ export class ObjectService {
               normalTime: true,
               passTime: true,
               cardNumber: true,
+              infoStyle:true,
               location: true,
               position: true,
             },
