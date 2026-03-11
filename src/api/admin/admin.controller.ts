@@ -23,7 +23,7 @@ export class AdminController {
 
   @Get('ping')
   getPing() {
-    return 'ok';
+    return 'ok, working well';
   }
 
   @Get('guardlist')
