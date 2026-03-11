@@ -116,8 +116,14 @@ export class AdminService {
 
     if (lastLog) {
       const diffMinutes = Math.floor(
-        (Date.now() - lastLog.createdAt.getTime()) / (1000 * 60),
+        (new Date().getTime() - lastLog.createdAt.getTime()) / (1000 * 60),
       );
+
+      // console.log(
+      //   new Date().getTime() - lastLog.createdAt.getTime(),
+      //   60 * 1000,
+      //   diffMinutes,
+      // );
 
       if (diffMinutes >= checkpoint.normalTime) {
         status = 'LATE';
@@ -151,7 +157,7 @@ export class AdminService {
       status = 'ON_TIME';
     }
 
-    if (status && !res) {
+    if (status) {
       res = await this.prisma.monitoringLog.create({
         data: {
           userId,
