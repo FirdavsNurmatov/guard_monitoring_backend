@@ -21,6 +21,11 @@ import { CurrentUser } from '../auth/current-user.decorator';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Get('ping')
+  getPing() {
+    return 'ok';
+  }
+
   @Get('guardlist')
   guardsList(@Query('organization_id', ParseIntPipe) org_id: number) {
     return this.adminService.guardList(org_id);
