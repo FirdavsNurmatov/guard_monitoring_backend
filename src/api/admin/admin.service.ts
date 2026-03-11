@@ -110,14 +110,20 @@ export class AdminService {
     } else if (checkpoint?.Object.organizationId !== user.organizationId) {
       throw new BadRequestException("Another organization's checkpoint");
     }
-
     const lastLog = checkpoint.monitoringLog[0];
-    let status: 'ON_TIME' | 'LATE' | 'MISSED' = 'ON_TIME';
+    let status: 'ON_TIME' | 'LATE' | 'MISSED' | null = null;
+    let res = lastLog ?? null;
 
     if (lastLog) {
       const diffMinutes = Math.floor(
         (new Date().getTime() - lastLog.createdAt.getTime()) / (1000 * 60),
       );
+
+      // console.log(
+      //   new Date().getTime() - lastLog.createdAt.getTime(),
+      //   60 * 1000,
+      //   diffMinutes,
+      // );
 
       if (diffMinutes >= checkpoint.normalTime) {
         status = 'LATE';
@@ -125,34 +131,56 @@ export class AdminService {
         if (diffMinutes >= checkpoint.normalTime + checkpoint.passTime) {
           status = 'MISSED';
         }
+      } else if (diffMinutes < 3) {
+        return {
+          success: true,
+          res: {
+            ...lastLog,
+            user: {
+              id: user.id,
+              login: user.login,
+              username: user.username,
+              organizationId: user.organizationId,
+            },
+            checkpoint: {
+              objectId: checkpoint.objectId,
+              id: checkpoint.id,
+              name: checkpoint.name,
+              position: checkpoint.position,
+            },
+          },
+        };
       } else {
         status = 'ON_TIME';
       }
+    } else {
+      status = 'ON_TIME';
     }
 
-    // Agar oxirgi status bilan yangi status bir xil bo‘lsa ham yangi log yaratiladi
-    const res = await this.prisma.monitoringLog.create({
-      data: {
-        userId,
-        checkpointId: checkpoint.id,
-        status,
-      },
-      include: {
-        user: {
-          select: {
-            id: true,
-            login: true,
-            username: true,
-            organizationId: true,
+    if (status) {
+      res = await this.prisma.monitoringLog.create({
+        data: {
+          userId,
+          checkpointId: checkpoint.id,
+          status,
+        },
+        include: {
+          user: {
+            select: {
+              id: true,
+              login: true,
+              username: true,
+              organizationId: true,
+            },
+          },
+          checkpoint: {
+            select: { objectId: true, id: true, name: true, position: true },
           },
         },
-        checkpoint: {
-          select: { objectId: true, id: true, name: true, position: true },
-        },
-      },
-    });
+      });
 
-    this.gateway.sendLog(res, String(res.user.organizationId));
+      this.gateway.sendLog(res, String(user.organizationId));
+    }
 
     // console.log(
     //   `[${new Date().toLocaleTimeString('uz-UZ')}] Checkpoint:`,
