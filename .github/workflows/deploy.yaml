@@ -23,6 +23,8 @@ jobs:
             echo "Pulling latest code..."
             git pull origin main
 
+            pwd
+            
             echo "Installing dependencies..."
             npm install
 
