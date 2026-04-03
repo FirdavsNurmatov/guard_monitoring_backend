@@ -131,7 +131,7 @@ export class AdminService {
         if (diffMinutes >= checkpoint.normalTime + checkpoint.passTime) {
           status = 'MISSED';
         }
-      } else if (diffMinutes < 3) {
+      } else if (diffMinutes < 1) {
         return {
           success: true,
           res: {
