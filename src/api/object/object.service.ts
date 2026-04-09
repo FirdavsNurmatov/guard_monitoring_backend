@@ -17,7 +17,7 @@ export class ObjectService {
 
       if (!map) throw new NotFoundException(`Object not found`);
       return map;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -41,7 +41,7 @@ export class ObjectService {
               normalTime: true,
               passTime: true,
               cardNumber: true,
-              infoStyle:true,
+              infoStyle: true,
               location: true,
               position: true,
             },
@@ -51,7 +51,7 @@ export class ObjectService {
 
       if (!map) throw new NotFoundException(`Map not found`);
       return map;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }

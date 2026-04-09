@@ -25,7 +25,7 @@ export class CheckpointService {
       });
 
       return { res, length: res.length };
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -36,7 +36,7 @@ export class CheckpointService {
     try {
       const data = await this.prisma.checkpoints.findUnique({ where: { id } });
       if (!data) throw new NotFoundException('Checkpoint not found');
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);

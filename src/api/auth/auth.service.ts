@@ -52,7 +52,7 @@ export class AuthService {
         message: 'User created',
         data: result,
       };
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -106,7 +106,7 @@ export class AuthService {
           ...accesToken,
         },
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -155,7 +155,7 @@ export class AuthService {
         token,
         // guardStatus: data.status,
       };
-    } catch (error) {
+    } catch (error: any) {
       if (error.message != 'Guard not found')
         throw new BadRequestException(error.message);
       throw new NotFoundException(error.message);
@@ -200,7 +200,7 @@ export class AuthService {
       // }
       // return user;
       return null;
-    } catch (error) {
+    } catch (error: any) {
       throw new UnauthorizedException(error.message);
     }
   }

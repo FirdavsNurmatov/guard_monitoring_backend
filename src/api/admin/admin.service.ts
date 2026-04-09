@@ -44,7 +44,7 @@ export class AdminService {
       );
 
       return gpsLog;
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       else if (error.message == 'Forbidden')
@@ -70,7 +70,7 @@ export class AdminService {
         orderBy: { createdAt: 'desc' },
         take: limit,
       });
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -212,7 +212,7 @@ export class AdminService {
           username: true,
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -239,7 +239,7 @@ export class AdminService {
         );
 
       return res;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -309,7 +309,7 @@ export class AdminService {
         page,
         lastPage: Math.ceil(grouped.length / limit),
       };
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -360,7 +360,7 @@ export class AdminService {
         page,
         limit,
       };
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -388,7 +388,7 @@ export class AdminService {
       }));
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }

@@ -30,7 +30,7 @@ export class UserService {
         throw new NotFoundException('User not found');
       }
       return user;
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -66,7 +66,7 @@ export class UserService {
           status: 'ACTIVE',
         },
       });
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -79,7 +79,7 @@ export class UserService {
         where: { role: 'GUARD', organizationId: user.organizationId },
         select: { id: true, username: true, status: true, createdAt: true },
       });
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -91,7 +91,7 @@ export class UserService {
       });
       if (!guard) throw new NotFoundException('Guard not found');
       return guard;
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -122,7 +122,7 @@ export class UserService {
         where: { id },
         data: updateData,
       });
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -135,7 +135,7 @@ export class UserService {
         where: { id, organizationId: user.organizationId },
         data: { status: 'INACTIVE' },
       });
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -145,7 +145,7 @@ export class UserService {
       return await this.prisma.users.delete({
         where: { id, organizationId: user.organizationId },
       });
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }

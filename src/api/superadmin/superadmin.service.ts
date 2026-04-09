@@ -64,7 +64,7 @@ export class SuperadminService {
       });
 
       return data.imageUrl;
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -99,7 +99,7 @@ export class SuperadminService {
       });
 
       return { status: 'success' };
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -138,7 +138,7 @@ export class SuperadminService {
       // 🔹 Prisma orqali yaratish
       const created = await this.prisma.objects.create({ data });
       return created;
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -164,7 +164,7 @@ export class SuperadminService {
         page,
         limit,
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -192,7 +192,7 @@ export class SuperadminService {
       });
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -226,7 +226,7 @@ export class SuperadminService {
         },
       });
       return res;
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           throw new BadRequestException(
@@ -264,7 +264,7 @@ export class SuperadminService {
       });
 
       return res;
-    } catch (error) {
+    } catch (error: any) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
           throw new BadRequestException({
@@ -288,7 +288,7 @@ export class SuperadminService {
       });
       if (!data) throw new NotFoundException('Checkpoint not found');
       return await this.prisma.checkpoints.delete({ where: { id } });
-    } catch (error) {
+    } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
       throw new BadRequestException(error.message);
@@ -337,7 +337,7 @@ export class SuperadminService {
         organizationId: data.organizationId,
         role: data.role,
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -368,7 +368,7 @@ export class SuperadminService {
         page,
         limit,
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -385,7 +385,7 @@ export class SuperadminService {
         data,
         include: { organization: true },
       });
-    } catch (error) {
+    } catch (error: any) {
       if (error.code === 'P2002') {
         throw new BadRequestException('Login yoki username allaqachon mavjud');
       }
@@ -414,7 +414,7 @@ export class SuperadminService {
       });
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -438,7 +438,7 @@ export class SuperadminService {
         page,
         limit,
       };
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -468,7 +468,7 @@ export class SuperadminService {
         where: { id },
         data: { name, status },
       });
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -479,7 +479,7 @@ export class SuperadminService {
         where: { id },
         data: { status },
       });
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
@@ -491,7 +491,7 @@ export class SuperadminService {
       });
 
       return data;
-    } catch (error) {
+    } catch (error: any) {
       throw new BadRequestException(error.message);
     }
   }
