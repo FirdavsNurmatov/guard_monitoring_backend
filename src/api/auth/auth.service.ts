@@ -76,7 +76,7 @@ export class AuthService {
         },
       });
 
-      if (!data) {
+      if (!data || data.role === 'GUARD') {
         throw new NotFoundException('User not found');
       } else if (data.status == 'INACTIVE') {
         throw new BadRequestException('User is inactive');
