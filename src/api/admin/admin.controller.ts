@@ -92,6 +92,29 @@ export class AdminController {
 
   @UseGuards(AuthGuard, RoleGuard)
   @Roles(Role.ADMIN)
+  @Get('monitoringLogsFiltered')
+  findAllLogsWithDateFilter(
+    @CurrentUser() user: any,
+    @Query('objectId') objectId: number,
+    @Query('page') page = 1,
+    @Query('limit') limit = 10,
+    @Query('period') period: 'daily' | 'weekly' | 'monthly',
+    @Query('startDate') startDate?: string,
+    @Query('endDate') endDate?: string,
+  ) {
+    return this.adminService.findAllLogsWithDateFilter(
+      user,
+      +objectId,
+      +page,
+      +limit,
+      period,
+      startDate,
+      endDate,
+    );
+  }
+
+  @UseGuards(AuthGuard, RoleGuard)
+  @Roles(Role.ADMIN)
   @Get('users')
   findAllUsers(@CurrentUser() user: any) {
     return this.adminService.findAllUsers(user);

@@ -392,4 +392,113 @@ export class AdminService {
       throw new BadRequestException(error.message);
     }
   }
+
+  async findAllLogsWithDateFilter(
+    user: any,
+    objectId: number,
+    page: number,
+    limit: number,
+    period?: 'daily' | 'weekly' | 'monthly',
+    startDate?: string,
+    endDate?: string,
+  ) {
+    try {
+      const objectData = await this.prisma.objects.findUnique({
+        where: { id: objectId },
+      });
+      if (!objectData) {
+        throw new NotFoundException('Object not found');
+      } else if (objectData.organizationId !== user.organizationId) {
+        throw new BadRequestException('Wrong organization');
+      }
+
+      const skip = (page - 1) * limit;
+      let startDateFilter: Date;
+      let endDateFilter: Date;
+
+      if (startDate && endDate) {
+        startDateFilter = new Date(startDate);
+        endDateFilter = new Date(endDate);
+        endDateFilter.setHours(23, 59, 59, 999);
+      } else if (period) {
+        const now = new Date();
+        endDateFilter = new Date();
+        endDateFilter.setHours(23, 59, 59, 999);
+
+        switch (period) {
+          case 'daily':
+            startDateFilter = new Date(now);
+            startDateFilter.setHours(0, 0, 0, 0);
+            break;
+          case 'weekly':
+            startDateFilter = new Date(now);
+            startDateFilter.setDate(now.getDate() - 7);
+            startDateFilter.setHours(0, 0, 0, 0);
+            break;
+          case 'monthly':
+            startDateFilter = new Date(now);
+            startDateFilter.setDate(now.getDate() - 30);
+            startDateFilter.setHours(0, 0, 0, 0);
+            break;
+          default:
+            startDateFilter = new Date(now);
+            startDateFilter.setHours(0, 0, 0, 0);
+        }
+      } else {
+        startDateFilter = new Date();
+        startDateFilter.setHours(0, 0, 0, 0);
+        endDateFilter = new Date();
+        endDateFilter.setHours(23, 59, 59, 999);
+      }
+
+      const [items, total] = await Promise.all([
+        this.prisma.monitoringLog.findMany({
+          where: {
+            checkpoint: {
+              objectId: objectId,
+            },
+            createdAt: {
+              gte: startDateFilter,
+              lte: endDateFilter,
+            },
+          },
+          skip,
+          take: limit,
+          orderBy: { createdAt: 'desc' },
+          include: {
+            user: {
+              select: { username: true },
+            },
+            checkpoint: {
+              select: { name: true },
+            },
+          },
+        }),
+
+        this.prisma.monitoringLog.count({
+          where: {
+            checkpoint: { objectId: objectId },
+            createdAt: {
+              gte: startDateFilter,
+              lte: endDateFilter,
+            },
+          },
+        }),
+      ]);
+
+      return {
+        items,
+        total,
+        page,
+        limit,
+        period: period || 'custom',
+        startDate: startDateFilter,
+        endDate: endDateFilter,
+      };
+    } catch (error: any) {
+      if (error.message.includes('found'))
+        throw new NotFoundException(error.message);
+      throw new BadRequestException(error.message);
+    }
+  }
 }
