@@ -78,12 +78,12 @@ export class AdminService {
   }
 
   async checkin(data: CheckinDto) {
-    const { userId, checkpointCardNum } = data;
-
+    const { userId, checkpointCardNum, latitude, longitude } = data;
+    
     if (!userId || !checkpointCardNum) {
       throw new BadRequestException('userId and checkpointCardNum required');
     }
-
+    
     const user = await this.prisma.users.findUnique({
       where: { id: userId },
     });
@@ -93,7 +93,7 @@ export class AdminService {
     if (user.role !== 'GUARD') {
       throw new BadRequestException('User must be Guard');
     }
-
+  
     const checkpoint = await this.prisma.checkpoints.findFirst({
       where: { cardNumber: checkpointCardNum },
       include: {
@@ -104,7 +104,7 @@ export class AdminService {
         Object: true,
       },
     });
-
+   
     if (!checkpoint) {
       throw new BadRequestException('Checkpoint does not exist');
     } else if (checkpoint?.Object.organizationId !== user.organizationId) {
@@ -113,21 +113,14 @@ export class AdminService {
     const lastLog = checkpoint.monitoringLog[0];
     let status: 'ON_TIME' | 'LATE' | 'MISSED' | null = null;
     let res = lastLog ?? null;
-
+   
     if (lastLog) {
       const diffMinutes = Math.floor(
         (new Date().getTime() - lastLog.createdAt.getTime()) / (1000 * 60),
       );
-
-      // console.log(
-      //   new Date().getTime() - lastLog.createdAt.getTime(),
-      //   60 * 1000,
-      //   diffMinutes,
-      // );
-
       if (diffMinutes >= checkpoint.normalTime) {
         status = 'LATE';
-
+       
         if (diffMinutes >= checkpoint.normalTime + checkpoint.passTime) {
           status = 'MISSED';
         }
@@ -156,13 +149,14 @@ export class AdminService {
     } else {
       status = 'ON_TIME';
     }
-
+  
     if (status) {
       res = await this.prisma.monitoringLog.create({
         data: {
           userId,
           checkpointId: checkpoint.id,
           status,
+          location: latitude && longitude ? { latitude, longitude } : undefined,
         },
         include: {
           user: {
@@ -181,13 +175,6 @@ export class AdminService {
 
       this.gateway.sendLog(res, String(user.organizationId));
     }
-
-    // console.log(
-    //   `[${new Date().toLocaleTimeString('uz-UZ')}] Checkpoint:`,
-    //   checkpoint.name,
-    //   '| Status:',
-    //   status,
-    // );
 
     return { success: true, res };
   }
