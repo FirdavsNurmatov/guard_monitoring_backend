@@ -79,11 +79,11 @@ export class AdminService {
 
   async checkin(data: CheckinDto) {
     const { userId, checkpointCardNum, latitude, longitude } = data;
-    
+
     if (!userId || !checkpointCardNum) {
       throw new BadRequestException('userId and checkpointCardNum required');
     }
-    
+
     const user = await this.prisma.users.findUnique({
       where: { id: userId },
     });
@@ -93,7 +93,7 @@ export class AdminService {
     if (user.role !== 'GUARD') {
       throw new BadRequestException('User must be Guard');
     }
-  
+
     const checkpoint = await this.prisma.checkpoints.findFirst({
       where: { cardNumber: checkpointCardNum },
       include: {
@@ -104,7 +104,7 @@ export class AdminService {
         Object: true,
       },
     });
-   
+
     if (!checkpoint) {
       throw new BadRequestException('Checkpoint does not exist');
     } else if (checkpoint?.Object.organizationId !== user.organizationId) {
@@ -113,14 +113,14 @@ export class AdminService {
     const lastLog = checkpoint.monitoringLog[0];
     let status: 'ON_TIME' | 'LATE' | 'MISSED' | null = null;
     let res = lastLog ?? null;
-   
+
     if (lastLog) {
       const diffMinutes = Math.floor(
         (new Date().getTime() - lastLog.createdAt.getTime()) / (1000 * 60),
       );
       if (diffMinutes >= checkpoint.normalTime) {
         status = 'LATE';
-       
+
         if (diffMinutes >= checkpoint.normalTime + checkpoint.passTime) {
           status = 'MISSED';
         }
@@ -149,7 +149,7 @@ export class AdminService {
     } else {
       status = 'ON_TIME';
     }
-  
+
     if (status) {
       res = await this.prisma.monitoringLog.create({
         data: {
@@ -271,7 +271,7 @@ export class AdminService {
         _max: { createdAt: true },
       });
 
-      // 3. Oxirgi loglarni olaymiz
+      // 3. Oxirgi loglarni olamiz
       const logs = await this.prisma.monitoringLog.findMany({
         where: {
           OR: grouped
@@ -331,7 +331,7 @@ export class AdminService {
               select: { username: true },
             },
             checkpoint: {
-              select: { name: true },
+              select: { name: true, location: true },
             },
           },
         }),
@@ -457,7 +457,7 @@ export class AdminService {
               select: { username: true },
             },
             checkpoint: {
-              select: { name: true },
+              select: { name: true, location: true },
             },
           },
         }),
