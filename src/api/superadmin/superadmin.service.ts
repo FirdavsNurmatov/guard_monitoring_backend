@@ -229,9 +229,10 @@ export class SuperadminService {
     } catch (error: any) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
-          throw new BadRequestException(
-            'Duplicate checkpoint card number:' + dto.cardNumber,
-          );
+          throw new BadRequestException({
+            message: 'Duplicate checkpoint card number',
+            cardNumber: dto.cardNumber,
+          });
         }
       } else if (error.message.includes('found'))
         throw new NotFoundException(error.message);
