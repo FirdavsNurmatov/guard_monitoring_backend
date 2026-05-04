@@ -110,6 +110,7 @@ model MonitoringLog {
 
   status   CheckpointStatus
   location Json?
+  distance Int?
 
   userId Int
   user   Users @relation(fields: [userId], references: [id])

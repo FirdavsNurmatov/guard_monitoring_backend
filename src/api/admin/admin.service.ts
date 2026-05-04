@@ -10,6 +10,11 @@ import { MonitoringGateway } from '../monitoring/monitoring.gateway';
 import { CheckinDto } from './dto/checkin/checkin.dto';
 import { CreateGpsLogDto } from './dto/gps/create-gps-log.dto';
 
+interface CheckpointLocation {
+  lat: number;
+  lng: number;
+}
+
 @Injectable()
 export class AdminService {
   constructor(
@@ -77,6 +82,26 @@ export class AdminService {
     }
   }
 
+  // Calculate distance between two coordinates in meters using Haversine formula
+  private calculateDistance(
+    lat1: number | undefined,
+    lon1: number | undefined,
+    lat2: number | undefined,
+    lon2: number | undefined,
+  ): number | null {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    const R = 6371e3;
+    const φ1 = (lat1 * Math.PI) / 180;
+    const φ2 = (lat2 * Math.PI) / 180;
+    const Δφ = ((lat2 - lat1) * Math.PI) / 180;
+    const Δλ = ((lon2 - lon1) * Math.PI) / 180;
+    const a =
+      Math.sin(Δφ / 2) * Math.sin(Δφ / 2) +
+      Math.cos(φ1) * Math.cos(φ2) * Math.sin(Δλ / 2) * Math.sin(Δλ / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c);
+  }
+
   async checkin(data: CheckinDto) {
     const { userId, checkpointCardNum, latitude, longitude } = data;
 
@@ -87,29 +112,34 @@ export class AdminService {
     const user = await this.prisma.users.findUnique({
       where: { id: userId },
     });
-    if (!user) {
-      throw new BadRequestException('Guard does not exist');
-    }
-    if (user.role !== 'GUARD') {
+    if (!user) throw new BadRequestException('Guard does not exist');
+    if (user.role !== 'GUARD')
       throw new BadRequestException('User must be Guard');
-    }
 
     const checkpoint = await this.prisma.checkpoints.findFirst({
       where: { cardNumber: checkpointCardNum },
       include: {
-        monitoringLog: {
-          orderBy: { createdAt: 'desc' },
-          take: 1,
-        },
+        monitoringLog: { orderBy: { createdAt: 'desc' }, take: 1 },
         Object: true,
       },
     });
 
     if (!checkpoint) {
       throw new BadRequestException('Checkpoint does not exist');
-    } else if (checkpoint?.Object.organizationId !== user.organizationId) {
+    } else if (checkpoint.Object.organizationId !== user.organizationId) {
       throw new BadRequestException("Another organization's checkpoint");
     }
+
+    // Checkin ichida ishlatish
+    const location = checkpoint.location as CheckpointLocation | null;
+
+    const distance = this.calculateDistance(
+      latitude,
+      longitude,
+      location?.lat,
+      location?.lng,
+    );
+
     const lastLog = checkpoint.monitoringLog[0];
     let status: 'ON_TIME' | 'LATE' | 'MISSED' | null = null;
     let res = lastLog ?? null;
@@ -157,6 +187,7 @@ export class AdminService {
           checkpointId: checkpoint.id,
           status,
           location: latitude && longitude ? { latitude, longitude } : undefined,
+          distance: distance, // ✅ Yangi maydon
         },
         include: {
           user: {
