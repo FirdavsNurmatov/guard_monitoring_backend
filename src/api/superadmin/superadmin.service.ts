@@ -349,18 +349,36 @@ export class SuperadminService {
 
       const [data, total] = await this.prisma.$transaction([
         this.prisma.users.findMany({
-          include: {
-            organization: true,
-          },
           where: {
-            role: 'ADMIN', // faqat adminlarni olish
+            role: 'ADMIN',
+          },
+          select: {
+            id:true,
+            username: true,
+            login: true,
+            createdAt: true,
+            status: true,
+            role:true,
+
+            organization: {
+              select: {
+                id: true,
+                name: true,
+              },
+            },
           },
           skip,
           take: limit,
-          orderBy: { createdAt: 'desc' },
+          orderBy: {
+            createdAt: 'desc',
+          },
         }),
 
-        this.prisma.users.count({ where: { role: 'ADMIN' } }),
+        this.prisma.users.count({
+          where: {
+            role: 'ADMIN',
+          },
+        }),
       ]);
 
       return {

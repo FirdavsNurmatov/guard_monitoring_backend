@@ -10,6 +10,8 @@ import { ObjectModule } from './object/object.module';
 import { CheckpointModule } from './checkpoint/checkpoint.module';
 import { UsersModule } from './user/user.module';
 import { SuperadminModule } from './superadmin/superadmin.module';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { APP_GUARD } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -26,8 +28,27 @@ import { SuperadminModule } from './superadmin/superadmin.module';
     ObjectModule,
     CheckpointModule,
     SuperadminModule,
+    ThrottlerModule.forRoot([
+      {
+        ttl: 1000,
+        limit: 1,
+        getTracker: (req) => {
+          const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
+
+          console.log('IP:', ip);
+
+          return ip;
+        },
+      },
+    ]),
   ],
   controllers: [],
-  providers: [MonitoringGateway],
+  providers: [
+    MonitoringGateway,
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
+    },
+  ],
 })
 export class AppModule {}
