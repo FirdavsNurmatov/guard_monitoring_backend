@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateUserDto } from './create-user.dto';
-import { IsEnum, IsOptional, IsString, MinLength } from 'class-validator';
+import { IsEnum, IsIn, IsOptional, IsString, MinLength } from 'class-validator';
 import { Role } from 'src/common/enums';
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
@@ -20,7 +20,7 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   password?: string;
 
   @IsOptional()
-  @IsEnum(Role)
+  @IsIn([Role.OPERATOR, Role.GUARD])
   role?: Role;
 
   @IsOptional()
