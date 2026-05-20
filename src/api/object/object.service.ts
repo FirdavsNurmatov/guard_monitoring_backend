@@ -18,7 +18,7 @@ export class ObjectService {
       if (!map) throw new NotFoundException(`Object not found`);
       return map;
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -52,7 +52,7 @@ export class ObjectService {
       if (!map) throw new NotFoundException(`Map not found`);
       return map;
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 }

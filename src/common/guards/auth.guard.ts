@@ -54,7 +54,7 @@ export class AuthGuard implements CanActivate {
       if (error.message != 'INACTIVE') {
         throw new UnauthorizedException();
       }
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
     return true;
   }

@@ -55,7 +55,7 @@ export class AuthService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -107,7 +107,7 @@ export class AuthService {
         },
       };
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -157,7 +157,7 @@ export class AuthService {
       };
     } catch (error: any) {
       if (error.message != 'Guard not found')
-        throw new BadRequestException(error.message);
+        throw new BadRequestException('Bad request');
       throw new NotFoundException(error.message);
     }
   }

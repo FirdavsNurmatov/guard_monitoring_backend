@@ -33,7 +33,7 @@ export class UserService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -69,7 +69,7 @@ export class UserService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -80,7 +80,7 @@ export class UserService {
         select: { id: true, username: true, status: true, createdAt: true },
       });
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -94,7 +94,7 @@ export class UserService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -125,7 +125,7 @@ export class UserService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -136,7 +136,7 @@ export class UserService {
         data: { status: 'INACTIVE' },
       });
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -146,7 +146,7 @@ export class UserService {
         where: { id, organizationId: user.organizationId },
       });
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 }

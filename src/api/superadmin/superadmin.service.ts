@@ -67,7 +67,7 @@ export class SuperadminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -102,7 +102,7 @@ export class SuperadminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -141,7 +141,7 @@ export class SuperadminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -165,7 +165,7 @@ export class SuperadminService {
         limit,
       };
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -193,7 +193,7 @@ export class SuperadminService {
 
       return data;
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -236,7 +236,7 @@ export class SuperadminService {
         }
       } else if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -278,7 +278,7 @@ export class SuperadminService {
         }
       } else if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -292,7 +292,7 @@ export class SuperadminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -339,7 +339,7 @@ export class SuperadminService {
         role: data.role,
       };
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -370,7 +370,7 @@ export class SuperadminService {
         limit,
       };
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -416,7 +416,7 @@ export class SuperadminService {
 
       return data;
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -440,7 +440,7 @@ export class SuperadminService {
         limit,
       };
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -470,7 +470,7 @@ export class SuperadminService {
         data: { name, status },
       });
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -481,7 +481,7 @@ export class SuperadminService {
         data: { status },
       });
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -493,7 +493,7 @@ export class SuperadminService {
 
       return data;
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 }

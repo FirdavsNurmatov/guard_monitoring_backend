@@ -28,7 +28,7 @@ export class CheckpointService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -39,7 +39,7 @@ export class CheckpointService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 }

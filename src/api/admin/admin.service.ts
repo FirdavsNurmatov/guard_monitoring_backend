@@ -78,7 +78,7 @@ export class AdminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -233,7 +233,7 @@ export class AdminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -258,7 +258,7 @@ export class AdminService {
 
       return res;
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -330,7 +330,7 @@ export class AdminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -381,7 +381,7 @@ export class AdminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -407,7 +407,7 @@ export class AdminService {
 
       return data;
     } catch (error: any) {
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
@@ -516,7 +516,7 @@ export class AdminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
-      throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 }
