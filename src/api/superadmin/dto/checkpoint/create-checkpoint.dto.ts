@@ -10,6 +10,7 @@ import {
   MinLength,
   IsNotEmpty,
   IsEnum,
+  IsNumberString,
 } from 'class-validator';
 
 class PositionDto {
@@ -72,7 +73,7 @@ export class CreateCheckpointDto {
   location?: LocationDto; // MAP bo‘lsa ishlatiladi
 
   @IsNotEmpty()
-  @IsString()
+  @IsNumberString()
   @MinLength(1)
   cardNumber: string;
 }

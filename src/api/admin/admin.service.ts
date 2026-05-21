@@ -63,10 +63,8 @@ export class AdminService {
       const userData = await this.prisma.users.findUnique({
         where: { id: userId },
       });
-      if (!userData) {
+      if (!userData || userData.organizationId !== user.organizationId) {
         throw new NotFoundException('User not found');
-      } else if (userData.organizationId !== user.organizationId) {
-        throw new BadRequestException('Wrong organization');
       }
 
       return await this.prisma.gpsLog.findMany({
