@@ -38,7 +38,7 @@ model Users {
   id Int @id @default(autoincrement())
 
   username String?
-  login    String  @unique
+  login    String  @unique @db.VarChar(255)
   password String
   role     Role    @default(GUARD)
   status   Status  @default(ACTIVE)

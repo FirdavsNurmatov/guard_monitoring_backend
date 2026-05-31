@@ -107,7 +107,11 @@ export class AuthService {
         },
       };
     } catch (error: any) {
-      if (error.message.includes('not found') || error.message.includes('incorrect') || error.message.includes('inactive'))
+      if (
+        error.message.includes('not found') ||
+        error.message.includes('incorrect') ||
+        error.message.includes('inactive')
+      )
         throw new BadRequestException(error.message);
       throw new BadRequestException('Bad request');
     }
