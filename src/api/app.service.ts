@@ -9,7 +9,7 @@ import { existsSync, mkdirSync } from 'fs';
 export default class Application {
   public static async main(): Promise<void> {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
-    // Throttle test
+    // Nginx proxy orqali kelgan real IP ni aniqlash uchun
     app.set('trust proxy', true);
 
     app.use(helmet());

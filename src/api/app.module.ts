@@ -11,6 +11,7 @@ import { SuperadminModule } from './superadmin/superadmin.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import configuration from 'src/common/config/configuration';
+import { CustomThrottlerGuard } from 'src/common/guards/custom-throttler.guard';
 
 @Module({
   imports: [
@@ -38,7 +39,7 @@ import configuration from 'src/common/config/configuration';
     MonitoringGateway,
     {
       provide: APP_GUARD,
-      useClass: ThrottlerGuard,
+      useClass: CustomThrottlerGuard,
     },
   ],
 })
