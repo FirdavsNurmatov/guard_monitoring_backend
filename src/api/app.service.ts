@@ -9,6 +9,9 @@ import { existsSync, mkdirSync } from 'fs';
 export default class Application {
   public static async main(): Promise<void> {
     const app = await NestFactory.create<NestExpressApplication>(AppModule);
+    // Throttle test
+    app.set('trust proxy', true);
+
     app.use(helmet());
     app.useGlobalPipes(
       new ValidationPipe({ whitelist: true, forbidNonWhitelisted: true }),

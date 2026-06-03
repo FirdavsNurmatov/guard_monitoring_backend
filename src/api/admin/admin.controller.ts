@@ -7,6 +7,7 @@ import {
   UseGuards,
   Query,
   ParseIntPipe,
+  Req,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
@@ -20,6 +21,18 @@ import { CurrentUser } from '../auth/current-user.decorator';
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
+
+  // Istalgan controller ga qo'shing
+  @Get('debug-ip')
+  debugIp(@Req() req: any) {
+    return {
+      ip: req.ip,
+      ips: req.ips,
+      forwarded: req.headers['x-forwarded-for'],
+      realIp: req.headers['x-real-ip'],
+      remoteAddress: req.socket?.remoteAddress,
+    };
+  }
 
   @Get('ping')
   getPing() {
