@@ -107,8 +107,9 @@ export class AuthService {
         },
       };
     } catch (error: any) {
-      if (
-        error.message.includes('not found') ||
+      if (error.message.includes('not found'))
+        throw new NotFoundException(error.message);
+      else if (
         error.message.includes('incorrect') ||
         error.message.includes('inactive')
       )
@@ -142,7 +143,7 @@ export class AuthService {
       } else if (data?.organization?.status == 'INACTIVE') {
         throw new BadRequestException('Organization is inactive');
       } else if (!(await bcrypt.compare(password, data.password))) {
-        throw new NotFoundException('Login yoki parol xato');
+        throw new BadRequestException('Login yoki parol xato');
       }
 
       const token = await this.generateAccessToken({
@@ -162,9 +163,14 @@ export class AuthService {
         // guardStatus: data.status,
       };
     } catch (error: any) {
-      if (error.message != 'Guard not found')
-        throw new BadRequestException('Bad request');
-      throw new NotFoundException(error.message);
+      if (error.message.includes('not'))
+        throw new NotFoundException(error.message);
+      else if (
+        error.message.includes('inactive') ||
+        error.message.includes('xato')
+      )
+        throw new BadRequestException(error.message);
+      throw new BadRequestException('Bad request');
     }
   }
 
