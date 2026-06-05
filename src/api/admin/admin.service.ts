@@ -123,6 +123,7 @@ export class AdminService {
     });
 
     if (!checkpoint) {
+      console.log('Topilmadi:', checkpointCardNum);
       throw new BadRequestException('Checkpoint does not exist');
     } else if (checkpoint.Object.organizationId !== user.organizationId) {
       throw new BadRequestException("Another organization's checkpoint");

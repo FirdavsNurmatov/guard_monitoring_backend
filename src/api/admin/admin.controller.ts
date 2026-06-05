@@ -47,7 +47,6 @@ export class AdminController {
   @UseGuards(AuthGuard)
   @Post('checkin')
   guardCheckin(@Body() dto: CheckinDto) {
-    console.log(dto);
     return this.adminService.checkin(dto);
   }
 
