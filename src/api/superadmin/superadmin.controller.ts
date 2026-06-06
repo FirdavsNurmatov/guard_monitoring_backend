@@ -29,6 +29,7 @@ import { CreateCheckpointDto } from './dto/checkpoint/create-checkpoint.dto';
 import { UpdateCheckpointDto } from './dto/checkpoint/update-checkpoint.dto';
 import { CreateObjectDto } from './dto/object/create-object.dto';
 import { UpdateObjectDto } from './dto/object/update-object.dto';
+import { SkipThrottle } from '@nestjs/throttler';
 
 @UseGuards(AuthGuard, RoleGuard)
 @Roles(Role.SUPERADMIN)
@@ -204,11 +205,13 @@ export class SuperadminController {
     return this.superadminService.removeObject(+id);
   }
 
+  @SkipThrottle()
   @Post('checkpoint')
   createCheckpoint(@Body() createCheckpointDto: CreateCheckpointDto) {
     return this.superadminService.createCheckpoint(createCheckpointDto);
   }
 
+  @SkipThrottle()
   @Patch('checkpoint/:id')
   updateCheckpoint(
     @Param('id', ParseIntPipe) id: number,
@@ -217,6 +220,7 @@ export class SuperadminController {
     return this.superadminService.updateCheckpoint(id, updateCheckpointDto);
   }
 
+  @SkipThrottle()
   @Delete('checkpoint/:id')
   deleteCheckpoint(@Param('id', ParseIntPipe) id: number) {
     return this.superadminService.deleteCheckpoint(id);
