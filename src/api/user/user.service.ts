@@ -90,6 +90,16 @@ export class UserService {
     try {
       const guard = await this.prisma.users.findFirst({
         where: { id, organizationId: user.organizationId, role: 'GUARD' },
+        select: {
+          id: true,
+          organizationId: true,
+          username: true,
+          login: true,
+          role: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
       if (!guard) throw new NotFoundException('Guard not found');
       return guard;
@@ -103,7 +113,7 @@ export class UserService {
   async updateUser(user: any, id: number, updateUserDto: UpdateUserDto) {
     try {
       const isUserExists = await this.prisma.users.findUnique({
-        where: { login: updateUserDto.login },
+        where: { id },
       });
       if (isUserExists && isUserExists.id !== id) {
         throw new BadRequestException('Login duplicate');
@@ -123,10 +133,22 @@ export class UserService {
       return await this.prisma.users.update({
         where: { id },
         data: updateData,
+        select: {
+          id: true,
+          organizationId: true,
+          username: true,
+          login: true,
+          role: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
+      else if (error.message.includes('duplicate'))
+        throw new BadRequestException(error.message);
       throw new BadRequestException('Bad request');
     }
   }
@@ -136,8 +158,20 @@ export class UserService {
       return await this.prisma.users.update({
         where: { id, organizationId: user.organizationId },
         data: { status: 'INACTIVE' },
+        select: {
+          id: true,
+          organizationId: true,
+          username: true,
+          login: true,
+          role: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
     } catch (error: any) {
+      if (error.meta.cause.includes('update'))
+        throw new NotFoundException('User not found');
       throw new BadRequestException('Bad request');
     }
   }
@@ -146,8 +180,20 @@ export class UserService {
     try {
       return await this.prisma.users.delete({
         where: { id, organizationId: user.organizationId },
+        select: {
+          id: true,
+          organizationId: true,
+          username: true,
+          login: true,
+          role: true,
+          status: true,
+          createdAt: true,
+          updatedAt: true,
+        },
       });
     } catch (error: any) {
+      if (error.meta.cause.includes('delete'))
+        throw new NotFoundException('User not found');
       throw new BadRequestException('Bad request');
     }
   }

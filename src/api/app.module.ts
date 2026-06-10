@@ -8,10 +8,11 @@ import { ObjectModule } from './object/object.module';
 import { CheckpointModule } from './checkpoint/checkpoint.module';
 import { UsersModule } from './user/user.module';
 import { SuperadminModule } from './superadmin/superadmin.module';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
 import configuration from 'src/common/config/configuration';
 import { CustomThrottlerGuard } from 'src/common/guards/custom-throttler.guard';
+import { AppController } from './app.controller';
 
 @Module({
   imports: [
@@ -34,7 +35,7 @@ import { CustomThrottlerGuard } from 'src/common/guards/custom-throttler.guard';
       },
     ]),
   ],
-  controllers: [],
+  controllers: [AppController],
   providers: [
     MonitoringGateway,
     {

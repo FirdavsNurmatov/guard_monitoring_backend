@@ -7,7 +7,6 @@ import {
   UseGuards,
   Query,
   ParseIntPipe,
-  Req,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
 import { AuthGuard } from 'src/common/guards/auth.guard';
@@ -22,41 +21,24 @@ import { CurrentUser } from '../auth/current-user.decorator';
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
-  // Istalgan controller ga qo'shing
-  @Get('debug-ip')
-  debugIp(@Req() req: any) {
-    return {
-      ip: req.ip,
-      ips: req.ips,
-      forwarded: req.headers['x-forwarded-for'],
-      realIp: req.headers['x-real-ip'],
-      remoteAddress: req.socket?.remoteAddress,
-    };
-  }
-
-  @Get('ping')
-  getPing() {
-    return 'ok, working well';
-  }
-
   @Get('guardlist')
   guardsList(@Query('organization_id', ParseIntPipe) org_id: number) {
     return this.adminService.guardList(org_id);
   }
 
-  @UseGuards(AuthGuard)
+  @UseGuards(AuthGuard, RoleGuard)
+  @Roles(Role.GUARD)
   @Post('checkin')
-  guardCheckin(@Body() dto: CheckinDto) {
-    return this.adminService.checkin(dto);
+  guardCheckin(@CurrentUser() user: any, @Body() dto: CheckinDto) {
+    return this.adminService.checkin(user, dto);
   }
 
+  @UseGuards(AuthGuard, RoleGuard)
+  @Roles(Role.GUARD)
   @UseGuards(AuthGuard)
   @Post('gps')
-  create(@Body() body: CreateGpsLogDto) {
-    if (!body.userId || !body.location?.lat || !body.location?.lng) {
-      return { error: 'userId va location (lat,lng) kerak' };
-    }
-    return this.adminService.create(body);
+  create(@CurrentUser() user: any, @Body() body: CreateGpsLogDto) {
+    return this.adminService.create(user, body);
   }
 
   @UseGuards(AuthGuard, RoleGuard)

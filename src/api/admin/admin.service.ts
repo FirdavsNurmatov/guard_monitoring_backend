@@ -23,14 +23,15 @@ export class AdminService {
   ) {}
 
   // Gps
-  async create(userData: CreateGpsLogDto) {
+  async create(currentUser: any, userData: CreateGpsLogDto) {
     try {
       const data = await this.prisma.users.findUnique({
         where: { id: userData.userId },
       });
 
       if (!data) throw new NotFoundException('User not found');
-      else if (data.role !== 'GUARD') throw new ForbiddenException('Forbidden');
+      else if (data.role !== 'GUARD' || currentUser.id !== data.id)
+        throw new ForbiddenException('Forbidden');
 
       const gpsLog = await this.prisma.gpsLog.create({
         data: {
@@ -100,12 +101,12 @@ export class AdminService {
     return Math.round(R * c);
   }
 
-  async checkin(data: CheckinDto) {
+  async checkin(currentUser: any, data: CheckinDto) {
     const { userId, checkpointCardNum, latitude, longitude } = data;
 
     if (!userId || !checkpointCardNum) {
       throw new BadRequestException('userId and checkpointCardNum required');
-    }
+    } else if (currentUser.id !== data.userId) throw new ForbiddenException();
 
     const user = await this.prisma.users.findUnique({
       where: { id: userId },
@@ -275,7 +276,7 @@ export class AdminService {
       if (!objectData) {
         throw new NotFoundException('Object not found');
       } else if (objectData.organizationId !== user.organizationId) {
-        throw new BadRequestException('Wrong orgazination');
+        throw new BadRequestException('Another organization is object');
       }
 
       const skip = (page - 1) * limit;
@@ -341,7 +342,7 @@ export class AdminService {
       if (!objectData) {
         throw new NotFoundException('Object not found');
       } else if (objectData.organizationId !== user.organizationId) {
-        throw new BadRequestException('Wrong orgazination');
+        throw new BadRequestException('Another organization is object');
       }
 
       const skip = (page - 1) * limit;
@@ -380,6 +381,8 @@ export class AdminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
+      else if (error.message.includes('Another'))
+        throw new ForbiddenException(error.message);
       throw new BadRequestException('Bad request');
     }
   }
@@ -393,18 +396,18 @@ export class AdminService {
             in: ['GUARD', 'OPERATOR'],
           },
         },
+        select: {
+          id: true,
+          organizationId: true,
+          login: true,
+          username: true,
+          role: true,
+          status: true,
+          createdAt: true,
+        },
       });
 
-      const data = res.map((item) => ({
-        id: item.id,
-        login: item.login,
-        username: item.username,
-        role: item.role,
-        status: item.status,
-        createdAt: item.createdAt,
-      }));
-
-      return data;
+      return res;
     } catch (error: any) {
       throw new BadRequestException('Bad request');
     }
@@ -426,7 +429,7 @@ export class AdminService {
       if (!objectData) {
         throw new NotFoundException('Object not found');
       } else if (objectData.organizationId !== user.organizationId) {
-        throw new BadRequestException('Wrong organization');
+        throw new BadRequestException('Another organization is object');
       }
 
       const skip = (page - 1) * limit;
@@ -515,6 +518,8 @@ export class AdminService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
+      else if (error.message.includes('Another'))
+        throw new ForbiddenException(error.message);
       throw new BadRequestException('Bad request');
     }
   }
