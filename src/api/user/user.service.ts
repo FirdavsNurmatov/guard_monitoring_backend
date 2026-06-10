@@ -69,6 +69,8 @@ export class UserService {
     } catch (error: any) {
       if (error.message.includes('found'))
         throw new NotFoundException(error.message);
+      else if (error.message.includes('duplicate'))
+        throw new BadRequestException(error.message);
       throw new BadRequestException('Bad request');
     }
   }
