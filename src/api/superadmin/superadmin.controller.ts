@@ -37,6 +37,38 @@ import { SkipThrottle } from '@nestjs/throttler';
 export class SuperadminController {
   constructor(private readonly superadminService: SuperadminService) {}
 
+  @Post('organization')
+  createOrganization(@Body() createOrganizationDto: CreateOrganizationDto) {
+    return this.superadminService.createOrganization(createOrganizationDto);
+  }
+
+  @Get('organizations')
+  findAllOrganizations(
+    @Query('page') page = '1',
+    @Query('limit') limit = '10',
+  ) {
+    return this.superadminService.findAllOrganizations(
+      Number(page),
+      Number(limit),
+    );
+  }
+
+  @Patch('organization/:id')
+  updateOrganization(
+    @Param('id') id: string,
+    @Body() updateOrganizationDto: UpdateOrganizationDto,
+  ) {
+    return this.superadminService.updateOrganization(
+      +id,
+      updateOrganizationDto,
+    );
+  }
+
+  @Delete('organization/:id')
+  removeOrganization(@Param('id') id: string) {
+    return this.superadminService.removeOrganization(+id);
+  }
+
   @Post('object/:id/image')
   @UseInterceptors(
     FileInterceptor('file', {
@@ -89,46 +121,6 @@ export class SuperadminController {
   @Delete('object/:id/image')
   removeObjectImage(@Param('id') id: string) {
     return this.superadminService.removeObjectImage(+id);
-  }
-
-  @Post('organization')
-  createOrganization(@Body() createOrganizationDto: CreateOrganizationDto) {
-    return this.superadminService.createOrganization(createOrganizationDto);
-  }
-
-  @Get('organizations')
-  findAllOrganizations(
-    @Query('page') page = '1',
-    @Query('limit') limit = '10',
-  ) {
-    return this.superadminService.findAllOrganizations(
-      Number(page),
-      Number(limit),
-    );
-  }
-
-  @Patch('organization/:id')
-  updateOrganization(
-    @Param('id') id: string,
-    @Body() updateOrganizationDto: UpdateOrganizationDto,
-  ) {
-    return this.superadminService.updateOrganization(
-      +id,
-      updateOrganizationDto,
-    );
-  }
-
-  @Patch('organization/:id/status')
-  updateStatus(
-    @Param('id') id: string,
-    @Body() body: { status: 'ACTIVE' | 'INACTIVE' },
-  ) {
-    return this.superadminService.updateOrganizationStatus(+id, body.status);
-  }
-
-  @Delete('organization/:id')
-  removeOrganization(@Param('id') id: string) {
-    return this.superadminService.removeOrganization(+id);
   }
 
   @Post('object')

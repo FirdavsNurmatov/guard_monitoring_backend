@@ -171,11 +171,10 @@ export class SuperadminService {
 
   async findOneObject(id: number) {
     try {
-      const data = await this.prisma.objects.findUnique({
+      return await this.prisma.objects.findUnique({
         where: { id },
         include: { checkpoints: true },
       });
-      return data;
     } catch (error) {
       throw new NotFoundException('Object not found');
     }
@@ -353,12 +352,12 @@ export class SuperadminService {
             role: 'ADMIN',
           },
           select: {
-            id:true,
+            id: true,
             username: true,
             login: true,
             createdAt: true,
             status: true,
-            role:true,
+            role: true,
 
             organization: {
               select: {
@@ -428,12 +427,12 @@ export class SuperadminService {
 
       if (data) throw new BadRequestException('Organization already exists');
 
-      await this.prisma.organization.create({
+      return await this.prisma.organization.create({
         data: { name: createOrganizationDto.name },
       });
-
-      return data;
     } catch (error: any) {
+      if (error.message.includes('already'))
+        throw new BadRequestException(error.message);
       throw new BadRequestException('Bad request');
     }
   }
@@ -479,38 +478,32 @@ export class SuperadminService {
         });
 
         if (exist) {
-          throw new BadRequestException('Bunday nomli organization mavjud');
+          throw new BadRequestException('Organization already exists');
         }
       }
 
-      return this.prisma.organization.update({
+      const data = await this.prisma.organization.update({
         where: { id },
         data: { name, status },
       });
-    } catch (error: any) {
-      throw new BadRequestException('Bad request');
-    }
-  }
 
-  async updateOrganizationStatus(id: number, status: 'ACTIVE' | 'INACTIVE') {
-    try {
-      return this.prisma.organization.update({
-        where: { id },
-        data: { status },
-      });
+      return data;
     } catch (error: any) {
+      if (error.message.includes('already'))
+        throw new BadRequestException(error.message);
       throw new BadRequestException('Bad request');
     }
   }
 
   async removeOrganization(id: number) {
     try {
-      const data = await this.prisma.organization.delete({
+      return await this.prisma.organization.delete({
         where: { id },
       });
-
-      return data;
     } catch (error: any) {
+      if (error.meta.cause.includes('delete')) {
+        throw new NotFoundException('Organization not found');
+      }
       throw new BadRequestException('Bad request');
     }
   }
