@@ -10,9 +10,8 @@ import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums';
 import { RoleGuard } from 'src/common/guards/role.guard';
 import { CurrentUser } from '../auth/current-user.decorator';
-import { AuthGuard } from 'src/common/guards/auth.guard';
 
-@UseGuards(AuthGuard, RoleGuard)
+@UseGuards( RoleGuard)
 @Controller('object')
 export class ObjectController {
   constructor(private readonly objectService: ObjectService) {}

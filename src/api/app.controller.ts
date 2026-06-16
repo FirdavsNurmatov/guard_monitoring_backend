@@ -1,5 +1,7 @@
 import { Controller, Get, Req } from '@nestjs/common';
+import { Public } from 'src/common/guards/public.guard';
 
+@Public()
 @Controller()
 export class AppController {
   // Istalgan controller ga qo'shing

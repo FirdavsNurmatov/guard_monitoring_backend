@@ -1,12 +1,11 @@
 import { Controller, Get, Param, UseGuards, Query } from '@nestjs/common';
 import { CheckpointService } from './checkpoint.service';
-import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RoleGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums';
 import { CurrentUser } from '../auth/current-user.decorator';
 
-@UseGuards(AuthGuard, RoleGuard)
+@UseGuards( RoleGuard)
 @Controller('checkpoint')
 export class CheckpointController {
   constructor(private readonly checkpointService: CheckpointService) {}

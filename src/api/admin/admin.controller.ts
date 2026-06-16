@@ -9,39 +9,39 @@ import {
   ParseIntPipe,
 } from '@nestjs/common';
 import { AdminService } from './admin.service';
-import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RoleGuard } from 'src/common/guards/role.guard';
 import { Roles } from 'src/common/decorators/role.decorator';
 import { Role } from 'src/common/enums';
 import { CheckinDto } from './dto/checkin/checkin.dto';
 import { CreateGpsLogDto } from './dto/gps/create-gps-log.dto';
 import { CurrentUser } from '../auth/current-user.decorator';
+import { Public } from 'src/common/guards/public.guard';
 
 @Controller('admin')
 export class AdminController {
   constructor(private readonly adminService: AdminService) {}
 
+  @Public()
   @Get('guardlist')
   guardsList(@Query('organization_id', ParseIntPipe) org_id: number) {
     return this.adminService.guardList(org_id);
   }
 
-  @UseGuards(AuthGuard, RoleGuard)
+  @UseGuards(RoleGuard)
   @Roles(Role.GUARD)
   @Post('checkin')
   guardCheckin(@CurrentUser() user: any, @Body() dto: CheckinDto) {
     return this.adminService.checkin(user, dto);
   }
 
-  @UseGuards(AuthGuard, RoleGuard)
+  @UseGuards(RoleGuard)
   @Roles(Role.GUARD)
-  @UseGuards(AuthGuard)
   @Post('gps')
   create(@CurrentUser() user: any, @Body() body: CreateGpsLogDto) {
     return this.adminService.create(user, body);
   }
 
-  @UseGuards(AuthGuard, RoleGuard)
+  @UseGuards(RoleGuard)
   @Roles(Role.ADMIN, Role.OPERATOR)
   @Get('gps/:userId')
   findLatest(
@@ -56,7 +56,7 @@ export class AdminController {
     );
   }
 
-  @UseGuards(AuthGuard, RoleGuard)
+  @UseGuards(RoleGuard)
   @Roles(Role.ADMIN, Role.OPERATOR)
   @Get('logs')
   findAllLogsByObjectId(
@@ -73,7 +73,7 @@ export class AdminController {
     });
   }
 
-  @UseGuards(AuthGuard, RoleGuard)
+  @UseGuards(RoleGuard)
   @Roles(Role.ADMIN)
   @Get('monitoringLogs')
   findAllLogs(
@@ -85,7 +85,7 @@ export class AdminController {
     return this.adminService.findAllLogs(user, +objectId, +page, +limit);
   }
 
-  @UseGuards(AuthGuard, RoleGuard)
+  @UseGuards(RoleGuard)
   @Roles(Role.ADMIN)
   @Get('monitoringLogsFiltered')
   findAllLogsWithDateFilter(
@@ -108,7 +108,7 @@ export class AdminController {
     );
   }
 
-  @UseGuards(AuthGuard, RoleGuard)
+  @UseGuards(RoleGuard)
   @Roles(Role.ADMIN)
   @Get('users')
   findAllUsers(@CurrentUser() user: any) {

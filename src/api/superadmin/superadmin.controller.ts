@@ -13,7 +13,6 @@ import {
   UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
-import { AuthGuard } from 'src/common/guards/auth.guard';
 import { RoleGuard } from 'src/common/guards/role.guard';
 import { Role } from 'src/common/enums';
 import { Roles } from 'src/common/decorators/role.decorator';
@@ -31,7 +30,7 @@ import { CreateObjectDto } from './dto/object/create-object.dto';
 import { UpdateObjectDto } from './dto/object/update-object.dto';
 import { SkipThrottle } from '@nestjs/throttler';
 
-@UseGuards(AuthGuard, RoleGuard)
+@UseGuards(RoleGuard)
 @Roles(Role.SUPERADMIN)
 @Controller('superadmin')
 export class SuperadminController {

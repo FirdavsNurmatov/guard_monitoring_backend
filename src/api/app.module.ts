@@ -13,6 +13,8 @@ import { APP_GUARD } from '@nestjs/core';
 import configuration from 'src/common/config/configuration';
 import { CustomThrottlerGuard } from 'src/common/guards/custom-throttler.guard';
 import { AppController } from './app.controller';
+import { RedisModule } from './redis/redis.module';
+import { AuthGuard } from 'src/common/guards/auth.guard';
 
 @Module({
   imports: [
@@ -30,17 +32,22 @@ import { AppController } from './app.controller';
     SuperadminModule,
     ThrottlerModule.forRoot([
       {
-        ttl: 10000,
-        limit: 10,
+        ttl: 60_000,
+        limit: 300,
       },
     ]),
+    RedisModule,
   ],
   controllers: [AppController],
   providers: [
     MonitoringGateway,
     {
       provide: APP_GUARD,
-      useClass: CustomThrottlerGuard,
+      useClass: AuthGuard, // ✅ 1-birinchi ishlaydi
+    },
+    {
+      provide: APP_GUARD,
+      useClass: CustomThrottlerGuard, // ✅ 2-ikkinchi ishlaydi, req.user tayyor
     },
   ],
 })

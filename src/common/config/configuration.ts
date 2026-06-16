@@ -7,6 +7,7 @@ export default () => ({
     accessTokenKey: process.env.ACCESS_TOKEN_KEY,
     accessTokenExpireTime: process.env.ACCESS_TOKEN_EXPIRE_TIME,
   },
+  redis: process.env.REDIS_URL
   // refresh: {
   //   refreshTokenKey: process.env.REFRESH_TOKEN_KEY,
   //   refreshTokenExpireTime: process.env.REFRESH_TOKEN_EXPIRE_TIME,
